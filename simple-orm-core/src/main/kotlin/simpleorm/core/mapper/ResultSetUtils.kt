@@ -10,6 +10,7 @@ fun ResultSet.getterByType(kClass: KClassifier): (String)->Any{
         String::class -> { s: String -> this.getString(s)}
         Long::class -> { s: String -> this.getInt(s)}
         Short::class -> { s: String -> this.getInt(s)}
+        List::class -> {s: String -> listOf<Any>()}
         else -> error("cannot find extract for type: $kClass")
     }
 }

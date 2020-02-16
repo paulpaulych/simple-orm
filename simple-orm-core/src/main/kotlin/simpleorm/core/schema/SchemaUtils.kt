@@ -2,6 +2,7 @@ package simpleorm.core.schema
 
 import simpleorm.core.schema.ast.RawEntityDescriptor
 import simpleorm.core.schema.ast.RawFieldDescriptor
+import simpleorm.core.schema.ast.RawOneToMany
 import simpleorm.core.schema.ast.RawOrmSchema
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberProperties
@@ -30,6 +31,16 @@ private fun RawFieldDescriptor.toPropertyDescriptor(): PropertyDescriptor {
     return PropertyDescriptor(
             column = this.column,
             isId = this.isId,
-            manyToOne = this.manyToOne?.let { Class.forName(it).kotlin as KClass<Any> }
+            oneToMany = this.oneToMany?.toOneToMany()
+    )
+}
+
+private fun RawOneToMany.toOneToMany(): OneToMany<Any>{
+    val kClass = Class.forName(this.className).kotlin as KClass<Any>
+    val kProperty = kClass.declaredMemberProperties.find { it.name == this.keyField }
+            ?: error("property ${this.keyField} not found in ${kClass.qualifiedName}")
+    return OneToMany(
+            kClass = kClass,
+            foreignKey = kProperty
     )
 }

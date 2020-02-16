@@ -6,6 +6,8 @@ data class Filter(
         val value: Any
 ): SqlFragment {
 
-    override fun toString(): String =
-        "$column = ${ if(value is Number) value else "'$value'"}"
+    override fun toString(): String {
+        return "$column = ${ if(value is Number) value else "'$value'"}"
+    }
+
 }

@@ -1,6 +1,7 @@
 package simpleorm
 
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 
 inline fun <reified T: Any> KClass<T>.getAll(): Collection<T>{
     val ormContext = OrmContextProvider.ormContext?: contextNotInitialized()
@@ -11,6 +12,11 @@ inline fun <reified T: Any> KClass<T>.getAll(): Collection<T>{
 inline fun <reified T: Any> KClass<T>.getById(id: Any): T?{
     val ormTemplate = OrmContextProvider.ormContext?.ormTemplate ?: contextNotInitialized()
     return ormTemplate.getById(this, id)
+}
+
+inline fun <reified T: Any> KClass<T>.getByParam(params: Map<KProperty1<T,*>, Any?>): Collection<T>{
+    val ormTemplate = OrmContextProvider.ormContext?.ormTemplate ?: contextNotInitialized()
+    return ormTemplate.getByParam(this, params)
 }
 
 inline fun <reified T: Any> save(obj: T){

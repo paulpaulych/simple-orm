@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RawFieldDescriptor(
     val isId: Boolean = false,
-    val column: String,
-    val manyToOne: String? = null
+    val column: String? = null,
+    val oneToMany: RawOneToMany? = null
 )
+
