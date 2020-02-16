@@ -6,7 +6,7 @@ import io.kotlintest.specs.FunSpec
 import paulpaulych.utils.ResourceLoader
 import simpleorm.core.jdbc.JdbcTemplate
 import simpleorm.core.mapper.MapperFactory
-import simpleorm.core.schema.EntityDescriptorRegistry
+import simpleorm.core.schema.OrmSchemaDescriptor
 import simpleorm.core.schema.SchemaParser
 import simpleorm.test.ExampleEntity
 
@@ -22,7 +22,7 @@ class JbdcTemplateTest: FunSpec(){
         val jdbc = JdbcTemplate(
                 HikariDataSource(hikariConfig)
         )
-        val registry = EntityDescriptorRegistry(SchemaParser(ResourceLoader.loadText("test-schema.yml")))
+        val registry = OrmSchemaDescriptor(SchemaParser(ResourceLoader.loadText("test-schema.yml")))
         val mapperFactory = MapperFactory(registry)
 
         test("save and get list"){

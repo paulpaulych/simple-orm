@@ -5,8 +5,8 @@ import kotlin.reflect.KType
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.declaredMemberProperties
 
-class EntityDescriptorRegistry(
-    private val schemaParser: SchemaParser
+class OrmSchemaDescriptor(
+    schemaParser: SchemaParser
 ){
 
     private val entities: Map<KType, EntityDescriptor>
@@ -24,7 +24,7 @@ class EntityDescriptorRegistry(
         val clazz = Class.forName(className).kotlin
         if(!clazz.isData) throw RuntimeException("persistent class must be marked as data")
         val declaredProperties = clazz.declaredMemberProperties
-        val fieldsMap = entityDescriptor.columns.map { (propName, attrName) ->
+        val fieldsMap = entityDescriptor.fields.map { (propName, attrName) ->
             val prop = declaredProperties.find {it.name == propName }
             prop?: throw RuntimeException("unknown property: $propName")
             prop.name to attrName

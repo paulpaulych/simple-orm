@@ -24,6 +24,8 @@ test {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation "org.slf4j:slf4j-api:$slf4jVersion"
+
 
     testCompile("io.kotlintest:kotlintest-runner-junit5:3.4.2")
 }

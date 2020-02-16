@@ -1,7 +1,7 @@
 package simpleorm.core.mapper
 
 import simpleorm.core.schema.EntityDescriptor
-import simpleorm.core.schema.EntityDescriptorRegistry
+import simpleorm.core.schema.OrmSchemaDescriptor
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 import kotlin.reflect.KClassifier
@@ -52,7 +52,7 @@ fun ResultSet.getterByType(kClass: KClassifier): (String)->Any{
 
 class ByDescriptorBearRowMapper<T: Any>(
     private val destClass: KClass<T>,
-    registry: EntityDescriptorRegistry
+    registry: OrmSchemaDescriptor
 ): BeanRawMapper<T>{
 
     private val entityDescriptor: EntityDescriptor = registry.findEntityDescriptor<T>(destClass.createType())
@@ -65,7 +65,7 @@ class ByDescriptorBearRowMapper<T: Any>(
                             destClass.primaryConstructor!!.parameters.fold(mapOf<KParameter, Any>()) {
                                 acc, prop -> acc + mapOf(
                                     prop to resultSet.getterByType(prop.type.classifier!!)
-                                            .invoke(entityDescriptor.columns[prop.name]
+                                            .invoke(entityDescriptor.fields[prop.name]?.column
                                                     ?: throw RuntimeException("unknown field $prop.name")))
                             }
                     )
@@ -79,7 +79,7 @@ class ByDescriptorBearRowMapper<T: Any>(
 
         return primaryConstructor.callBy(
                 values.map{ (pname: String, value: Any) ->
-                    val factName = entityDescriptor.columns[pname]
+                    val factName = entityDescriptor.fields[pname]!!.column
                     (primaryConstructor.parameters
                             .find { param: KParameter -> param.name == factName }
                             ?: error("unknown property")) to value

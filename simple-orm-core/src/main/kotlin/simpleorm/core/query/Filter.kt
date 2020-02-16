@@ -1,12 +1,11 @@
-//package simpleorm.core.query
-//
-//import tradefirm.simpleorm.SqlFragment
-//
-//data class Filter(
-//    val left: String,
-//    val right: String
-//): SqlFragment {
-//
-//    override fun toString(): String =
-//        "$left = $right"
-//}
+package simpleorm.core.query
+
+//TODO: preparedStatement?
+data class Filter(
+        val column: String,
+        val value: Any
+): SqlFragment {
+
+    override fun toString(): String =
+        "$column = ${ if(value is Number) value else "'$value'"}"
+}
