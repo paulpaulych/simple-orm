@@ -6,7 +6,7 @@ interface BeanRawMapper<T>{
 
     fun convert(resultSet: ResultSet): List<T>
 
-    fun convert(map: Map<String, Any>): T
+    fun convert(sqlResultMap: Map<String, Any>): T
 
 }
 
