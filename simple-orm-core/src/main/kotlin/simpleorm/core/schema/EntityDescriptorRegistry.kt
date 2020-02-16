@@ -1,23 +1,18 @@
 package simpleorm.core.schema
 
-import simpleorm.core.schema.EntityDescriptor
-import java.io.FileReader
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.declaredMemberProperties
 
 class EntityDescriptorRegistry(
-    private val schemaDeserializer: SchemaDeserializer,
-    private val schemaFileName: String
+    private val schemaParser: SchemaParser
 ){
 
     private val entities: Map<KType, EntityDescriptor>
 
     init{
-        val file = javaClass.classLoader.getResource(schemaFileName).file
-        val readText = FileReader(file).readText()
-        val rawSchemaInfo = schemaDeserializer.load(readText)
+        val rawSchemaInfo = schemaParser.parse()
 
         entities = rawSchemaInfo.entities.map{
             val (clazz, entityInfo) = validate(it.key, it.value)
@@ -27,8 +22,9 @@ class EntityDescriptorRegistry(
 
     fun validate(className: String, entityDescriptor: EntityDescriptor): Pair<KClass<Any>, EntityDescriptor>{
         val clazz = Class.forName(className).kotlin
+        if(!clazz.isData) throw RuntimeException("persistent class must be marked as data")
         val declaredProperties = clazz.declaredMemberProperties
-        val fieldsMap = entityDescriptor.fields.map { (propName, attrName) ->
+        val fieldsMap = entityDescriptor.columns.map { (propName, attrName) ->
             val prop = declaredProperties.find {it.name == propName }
             prop?: throw RuntimeException("unknown property: $propName")
             prop.name to attrName

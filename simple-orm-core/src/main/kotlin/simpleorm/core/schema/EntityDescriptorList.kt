@@ -10,6 +10,8 @@ data class EntityDescriptorList(
 @Serializable
 data class EntityDescriptor(
     val table: String,
-    val fields: Map<String, String>
-)
+    val columns: Map<String, String>
+){
+    val fields: Map<String, String> = columns.map { it.value to it.key }.toMap()
+}
 

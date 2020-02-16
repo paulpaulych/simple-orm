@@ -9,3 +9,4 @@ interface BeanRawMapper<T>{
     fun convert(map: Map<String, Any>): T
 
 }
+

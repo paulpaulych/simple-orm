@@ -15,9 +15,9 @@ interface JdbcOperations{
     fun <T: Any> queryForObject(query: String, returnType: KClass<T>): T?
     fun <T: Any> queryForObject(query: String, params: Map<String, String>, returnType: KClass<T>): T?
 
-    fun execute(statement: String): Boolean
+    fun executeUpdate(statement: String): Int
 
-    fun setAutoCommit()
+    fun setAutoCommit(flag: Boolean)
 
     fun begin()
     fun commit()

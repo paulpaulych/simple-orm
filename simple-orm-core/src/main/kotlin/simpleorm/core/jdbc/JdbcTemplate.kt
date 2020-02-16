@@ -18,7 +18,7 @@ class JdbcTemplate(
     }
 
     override fun <T : Any> queryForList(prepared: String, params: Map<String, String>, returnType: KClass<T>): List<T> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        error("not implemented") 
     }
 
     override fun queryForResultSet(query: String): ResultSet {
@@ -26,35 +26,34 @@ class JdbcTemplate(
     }
 
     override fun queryForResultSet(query: String, params: Map<String, String>): ResultSet {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        error("not implemented") 
     }
 
     override fun <T : Any> queryForObject(query: String, returnType: KClass<T>): T? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        error("not implemented") 
     }
 
     override fun <T : Any> queryForObject(query: String, params: Map<String, String>, returnType: KClass<T>): T? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        error("not implemented") 
     }
 
-    override fun execute(statement: String): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun executeUpdate(statement: String): Int =
+        connection.createStatement().executeUpdate(statement)
 
-    override fun setAutoCommit() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun setAutoCommit(flag: Boolean) {
+        connection.autoCommit = flag   
     }
 
     override fun begin() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        error("not implemented")
     }
 
     override fun commit() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        error("not implemented")
     }
 
     override fun rollback() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        error("not implemented")
     }
 
 }

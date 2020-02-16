@@ -35,6 +35,8 @@ dependencies {
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
 
     testCompile("io.kotlintest:kotlintest-runner-junit5:3.4.2")
+
+    testCompile(project(":common-utils"))
 }
 
 compileKotlin {

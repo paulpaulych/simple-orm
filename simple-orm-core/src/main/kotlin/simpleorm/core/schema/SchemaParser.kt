@@ -3,14 +3,19 @@ package simpleorm.core.schema
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import java.io.Reader
 
 
-class SchemaDeserializer{
+class SchemaParser(
+        private val rawText: String
+){
 
-    fun load(string: String): EntityDescriptorList {
+    constructor(reader: Reader):this(reader.readText())
+
+    fun parse(): EntityDescriptorList {
         val mapper = ObjectMapper(YAMLFactory())
         mapper.registerModule(KotlinModule())
-        return mapper.readValue(string, EntityDescriptorList::class.java)
+        return mapper.readValue(rawText, EntityDescriptorList::class.java)
     }
 
 }

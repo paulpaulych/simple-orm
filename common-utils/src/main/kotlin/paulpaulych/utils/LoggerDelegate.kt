@@ -1,9 +1,10 @@
-package simpleorm.util
+package paulpaulych.utils
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import com.sun.org.slf4j.internal.Logger
+import com.sun.org.slf4j.internal.LoggerFactory
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
+
 
 class LoggerDelegate : ReadOnlyProperty<Any?, Logger> {
 
@@ -21,4 +22,5 @@ class LoggerDelegate : ReadOnlyProperty<Any?, Logger> {
         }
         return logger!!
     }
+
 }

@@ -3,12 +3,11 @@ package simpleorm
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import simpleorm.core.jdbc.JdbcTemplate
-import simpleorm.core.mapper.PropertyNameRawMapper
-import java.sql.ResultSet
-import kotlin.reflect.KClassifier
+import simpleorm.core.mapper.SimplePropertyRawMapper
 
 
 fun main(){
+
     val hikariConfig = HikariConfig()
     hikariConfig.jdbcUrl = "jdbc:postgresql://localhost:5432/tradefirm"
     hikariConfig.username = "postgres"
@@ -18,7 +17,7 @@ fun main(){
     val jdbc = JdbcTemplate(HikariDataSource(hikariConfig))
     val resultList =
         jdbc.queryForList("select product_id, product_name from product",
-            PropertyNameRawMapper(Product::class)
+            SimplePropertyRawMapper(Product::class)
         )
     println(resultList)
 
