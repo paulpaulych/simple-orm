@@ -2,12 +2,12 @@ package simpleorm
 
 import simpleorm.core.jdbc.JdbcTemplate
 import simpleorm.core.mapper.MapperFactory
-import simpleorm.core.query.Filter
+import simpleorm.core.query.filter.EqualsFilter
 import simpleorm.core.query.FilteringQuery
 import simpleorm.core.query.InsertStatement
 import simpleorm.core.query.Query
 import simpleorm.core.schema.OrmSchema
-import simpleorm.core.schema.PropertyDescriptor
+import simpleorm.core.schema.property.OneToManyProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty1
@@ -23,8 +23,7 @@ class OrmTemplate(
         val ed = ormSchema.findEntityDescriptor(kClass)
         val selectQuery = Query(
                 table = ed.table,
-                //fixme: уюрать небезопасный каст
-                columns = ed.properties.values.map { it.column!! }
+                columns = ed.plainProperties.values.map { it.column }
         )
         return jdbc.queryForList(selectQuery.toString(), MapperFactory(ormSchema).byDescriptorMapper(kClass))
     }
@@ -34,13 +33,12 @@ class OrmTemplate(
         val query = FilteringQuery(
                 query = Query(
                         ed.table,
-                        //fixme: уюрать небезопасный каст
-                        ed.properties.values.map { it.column!! }
+                        ed.plainProperties.values.map { it.column }
                 ),
                 filters = params.map {
-                    val column = (ed.properties[it.key]?.column
+                    val column = (ed.plainProperties[it.key]?.column
                             ?: error("property ${it.key.name} not found in entity descriptor"))
-                    Filter(
+                    EqualsFilter(
                             column = column,
                             value = it.value!!
                     )
@@ -49,46 +47,37 @@ class OrmTemplate(
         return jdbc.queryForList(query.toString(), MapperFactory(ormSchema).byDescriptorMapper(kClass))
     }
 
-
-    //fixme: нечитабельно
-    override fun <T : Any> getById(kClass: KClass<T>, id: Any): T? {
+    override fun <T : Any> getByIdLazy(kClass: KClass<T>, id: Any): T? {
         val ed = ormSchema.findEntityDescriptor(kClass)
-        val selectQuery = FilteringQuery(
+        val selectQuery =
+            FilteringQuery(
                 Query(
                     table = ed.table,
-                    columns = ed.properties.values.filter { it.column != null }.map { it.column!! }
+                    columns = ed.plainProperties.values.map { it.column }
                 ),
                 filters = listOf(
-                    Filter(
-                        //fixme: уюрать небезопасный каст
-                        column = ed.properties.values.find { it.isId }!!.column!!,
-                        value = id
-                    )
+                        EqualsFilter(
+                                //fixme: уюрать небезопасный каст
+                                column = ed.idProperty.second.column,
+                                value = id
+                        )
                 )
-        )
+            )
+        return jdbc.queryForObject(selectQuery.toString(), MapperFactory(ormSchema).byDescriptorMapper(kClass))!!
+    }
 
-        println(selectQuery)
-        val result = jdbc.queryForObject(selectQuery.toString(), MapperFactory(ormSchema).byDescriptorMapper(kClass))!!
-        return ed.properties.toList().filter { it.second.oneToMany != null }.fold(result){
-            res: T, (kProperty: KProperty1<T, *>, pd: PropertyDescriptor)->
-                val joinableKClass = pd.oneToMany!!.kClass
-                val joinableList = joinableKClass.getByParam(
-                        mapOf(pd.oneToMany.foreignKey to ed.id.get(result))
-                )
-                println(joinableList)
-                kClass.updateValues(res, mapOf(
-                        (kProperty as KProperty1<T, Any>) to joinableList
-                ))
-        }
+    override fun <T : Any> getById(kClass: KClass<T>, id: Any): T? {
+        val byId = getByIdLazy(kClass, id) ?: return null
+        return loadExtra(kClass, byId)
     }
 
     override fun <T: Any> save(kClass: KClass<T>, obj: T){
         val ed = ormSchema.findEntityDescriptor(kClass)
         val insertStatement = InsertStatement(
                 table = ed.table,
-                values = ed.properties.map {
+                values = ed.plainProperties.map {
                     //fixme: уюрать небезопасный каст
-                    (kProperty, fd) -> fd.column!! to kProperty.get(obj)
+                    (kProperty, fd) -> fd.column to kProperty.get(obj)
                 }.toMap()
         )
         jdbc.executeUpdate(insertStatement.toString())
@@ -98,11 +87,24 @@ class OrmTemplate(
         TODO("not implemented")
     }
 
+    override fun <T : Any> loadExtra(kClass: KClass<T>, obj: T): T {
+        val ed = ormSchema.findEntityDescriptor(kClass)
+
+        return ed.oneToManyProperties.toList().fold(obj){
+            res: T, (kProperty: KProperty1<T, *>, pd: OneToManyProperty )->
+
+            val newValueKClass = pd.kClass
+            val newValue = newValueKClass.getByParam(
+                    mapOf(pd.foreignKey to ed.idProperty.first.get(obj))
+            )
+            kClass.updateValues(res, mapOf(kProperty to newValue))
+        }
+    }
 }
 
-private fun <T: Any> KClass<T>.updateValues(src: T, updateSrc: Map<KProperty1<T, Any>, Any?>): T{
+private fun <T: Any> KClass<T>.updateValues(src: T, updateSrc: Map<KProperty1<T, *>, *>): T{
     val constructor = this.primaryConstructor!!
-    val params = constructor.parameters.fold(emptyMap()) { acc: Map<KParameter, Any?>, kParameter ->
+    val params = constructor.parameters.fold(emptyMap()) { acc: Map<KParameter, *>, kParameter ->
         val newValue = updateSrc.toList().find { it.first.name == kParameter.name }
         if (newValue != null) {
             return@fold acc + mapOf(kParameter to newValue.second)

@@ -25,18 +25,17 @@ class ByDescriptorBearRowMapper<T: Any>(
                             constructor.parameters.fold(mapOf<KParameter, Any>()) {
                                 acc, kParameter ->
                                 val kProperty = destClass.declaredMemberProperties.find { kParameter.name == it.name }
-                                val pd = entityDescriptor.properties[kProperty]
-                                        ?: error("property descriptor not found for constructor parameter name ${kParameter.name}")
+                                val pd = entityDescriptor.plainProperties[kProperty]
+                                if(pd == null) {
+                                    if(kParameter.isOptional){
+                                        return@fold acc
+                                    }
+                                    error("property descriptor not found for constructor parameter name '${kParameter.name}'")
+                                }
                                 val column = pd.column
-                                if(column != null){
-                                    val value = resultSet.getterByType(kParameter.type.classifier!!)
-                                            .invoke(column)
-                                    return@fold acc + mapOf(kParameter to value)
-                                }
-                                if(!kParameter.isOptional){
-                                    error("value of field '${kParameter.name}' not found in resultSet")
-                                }
-                                acc
+                                val value = resultSet.getterByType(kParameter.type.classifier!!)
+                                        .invoke(column)
+                                return@fold acc + mapOf(kParameter to value)
                             }
                     )
             )

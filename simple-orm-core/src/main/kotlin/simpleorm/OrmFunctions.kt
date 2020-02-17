@@ -9,9 +9,19 @@ inline fun <reified T: Any> KClass<T>.getAll(): Collection<T>{
     return ormTemplate.getAll(this)
 }
 
+inline fun <reified T: Any> KClass<T>.getByIdLazy(id: Any): T?{
+    val ormTemplate = OrmContextProvider.ormContext?.ormTemplate ?: contextNotInitialized()
+    return ormTemplate.getByIdLazy(this, id)
+}
+
 inline fun <reified T: Any> KClass<T>.getById(id: Any): T?{
     val ormTemplate = OrmContextProvider.ormContext?.ormTemplate ?: contextNotInitialized()
     return ormTemplate.getById(this, id)
+}
+
+inline fun <reified T: Any> KClass<T>.loadExtra(obj: T): T? {
+    val ormTemplate = OrmContextProvider.ormContext?.ormTemplate ?: contextNotInitialized()
+    return ormTemplate.loadExtra(this, obj)
 }
 
 inline fun <reified T: Any> KClass<T>.getByParam(params: Map<KProperty1<T,*>, Any?>): Collection<T>{

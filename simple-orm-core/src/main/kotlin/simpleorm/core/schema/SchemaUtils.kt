@@ -4,6 +4,10 @@ import simpleorm.core.schema.ast.RawEntityDescriptor
 import simpleorm.core.schema.ast.RawFieldDescriptor
 import simpleorm.core.schema.ast.RawOneToMany
 import simpleorm.core.schema.ast.RawOrmSchema
+import simpleorm.core.schema.property.IdProperty
+import simpleorm.core.schema.property.OneToManyProperty
+import simpleorm.core.schema.property.PlainProperty
+import simpleorm.core.schema.property.PropertyDescriptor
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberProperties
 
@@ -28,19 +32,24 @@ private fun RawEntityDescriptor.toEntityDescriptor(kClass: KClass<Any>): EntityD
 }
 
 private fun RawFieldDescriptor.toPropertyDescriptor(): PropertyDescriptor {
-    return PropertyDescriptor(
-            column = this.column,
-            isId = this.isId,
-            oneToMany = this.oneToMany?.toOneToMany()
-    )
-}
 
-private fun RawOneToMany.toOneToMany(): OneToMany<Any>{
-    val kClass = Class.forName(this.className).kotlin as KClass<Any>
-    val kProperty = kClass.declaredMemberProperties.find { it.name == this.keyField }
-            ?: error("property ${this.keyField} not found in ${kClass.qualifiedName}")
-    return OneToMany(
-            kClass = kClass,
-            foreignKey = kProperty
-    )
+    if(this.oneToMany != null){
+        val kClass = Class.forName(oneToMany.className).kotlin as KClass<Any>
+        val kProperty = kClass.declaredMemberProperties.find { it.name == oneToMany.keyField }
+                ?: error("property ${oneToMany.keyField} not found in ${kClass.qualifiedName}")
+        return OneToManyProperty(
+                kClass = kClass,
+                foreignKey = kProperty
+        )
+    }
+    if(this.isId){
+        return IdProperty(
+            column = this.column?: error("column for property TODO() not specified")
+        )
+        //TODO: вставить название проперти
+    }
+    if(this.column != null){
+        return PlainProperty(column)
+    }
+    error("property kind not determined")
 }
