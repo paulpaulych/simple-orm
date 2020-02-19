@@ -3,7 +3,7 @@ package simpleorm.query
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 import paulpaulych.utils.ResourceLoader
-import simpleorm.core.query.Filter
+import simpleorm.core.query.filter.EqualsFilter
 import simpleorm.core.query.FilteringQuery
 import simpleorm.core.query.InsertStatement
 import simpleorm.core.query.Query
@@ -31,8 +31,8 @@ class SqlGenerationTest: FunSpec(){
                     listOf("long_value", "string_value")
                 ),
                 listOf(
-                        Filter("long_value", 1),
-                        Filter("string_value", "hello")
+                        EqualsFilter("long_value", 1),
+                        EqualsFilter("string_value", "hello")
                 )).toString() shouldBe ResourceLoader.loadText("ex_filtering_query.sql")
         }
 

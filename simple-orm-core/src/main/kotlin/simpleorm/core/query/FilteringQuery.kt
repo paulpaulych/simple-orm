@@ -1,8 +1,10 @@
 package simpleorm.core.query
 
+import simpleorm.core.query.filter.EqualsFilter
+
 data class FilteringQuery(
         val query: Query,
-        val filters: List<Filter> = listOf()
+        val filters: List<EqualsFilter> = listOf()
 ): SqlFragment {
     override fun toString(): String {
         val filters = filters.fold("") { acc, filter ->

@@ -56,7 +56,7 @@ class OrmTemplateTest : FunSpec(){
         }
 
         test("getById"){
-            val example = ExampleEntity::class.getById(1)
+            val example = ExampleEntity::class.getByIdLazy(1)
             example shouldBe ExampleEntity(1, "hello")
         }
 
@@ -64,7 +64,7 @@ class OrmTemplateTest : FunSpec(){
             val id = 3L
             val exampleEntity = ExampleEntity(id, "third")
             save(exampleEntity)
-            ExampleEntity::class.getById(id) shouldBe exampleEntity
+            ExampleEntity::class.getByIdLazy(id) shouldBe exampleEntity
         }
 
     }

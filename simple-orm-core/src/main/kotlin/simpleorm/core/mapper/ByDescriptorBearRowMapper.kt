@@ -15,20 +15,27 @@ class ByDescriptorBearRowMapper<T: Any>(
 
     private val entityDescriptor: EntityDescriptor<T> = ormSchema.findEntityDescriptor(destClass)
 
-    //fixme: это нечитабельно
+    //fixme: разобрать этот ад
     override fun convert(resultSet: ResultSet): List<T> {
+        val constructor = destClass.primaryConstructor!!
         val output = mutableListOf<T>()
         while(resultSet.next()){
             output.add(
-                    destClass.primaryConstructor!!.callBy(
-                            destClass.primaryConstructor!!.parameters.fold(mapOf<KParameter, Any>()) {
-                                acc, kParameter -> acc + mapOf(
-                                    kParameter to resultSet.getterByType(kParameter.type.classifier!!)
-                                            .invoke(entityDescriptor.properties[
-                                                    destClass.declaredMemberProperties
-                                                        .find { kParameter.name == it.name }
-                                            ]?.column
-                                                ?: throw RuntimeException("unknown field $kParameter.name")))
+                    constructor.callBy(
+                            constructor.parameters.fold(mapOf<KParameter, Any>()) {
+                                acc, kParameter ->
+                                val kProperty = destClass.declaredMemberProperties.find { kParameter.name == it.name }
+                                val pd = entityDescriptor.plainProperties[kProperty]
+                                if(pd == null) {
+                                    if(kParameter.isOptional){
+                                        return@fold acc
+                                    }
+                                    error("property descriptor not found for constructor parameter name '${kParameter.name}'")
+                                }
+                                val column = pd.column
+                                val value = resultSet.getterByType(kParameter.type.classifier!!)
+                                        .invoke(column)
+                                return@fold acc + mapOf(kParameter to value)
                             }
                     )
             )
