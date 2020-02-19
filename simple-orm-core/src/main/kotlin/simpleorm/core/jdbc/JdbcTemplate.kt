@@ -17,44 +17,50 @@ class JdbcTemplate(
         return mapper.convert(resultSet)
     }
 
-    override fun <T : Any> queryForList(prepared: String, params: Map<String, String>, returnType: KClass<T>): List<T> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun <T : Any> queryForList(prepared: String, params: Map<String, Any>, mapper: BeanRawMapper<T>): List<T> {
+        TODO("not implemented")
+//        val resultSet = connection.prepareStatement(prepared).executeQuery()
+//        return mapper.convert(resultSet)
     }
 
     override fun queryForResultSet(query: String): ResultSet {
         return connection.createStatement().executeQuery(query)
     }
 
-    override fun queryForResultSet(query: String, params: Map<String, String>): ResultSet {
+    override fun queryForResultSet(query: String, params: Map<String, Any>): ResultSet {
+        TODO("not implemented")
+    }
+
+
+    override fun <T : Any> queryForObject(query: String, mapper: BeanRawMapper<T>): T? {
+        val result = queryForList(query, mapper)
+        if(result.size != 1){
+            error("excepted result row number: 1, got: ${result.size}")
+        }
+        return result.first()
+    }
+
+    override fun <T : Any> queryForObject(query: String, params: Map<String, Any>, mapper: BeanRawMapper<T>): T? {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun <T : Any> queryForObject(query: String, returnType: KClass<T>): T? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun executeUpdate(statement: String): Int =
+        connection.createStatement().executeUpdate(statement)
 
-    override fun <T : Any> queryForObject(query: String, params: Map<String, String>, returnType: KClass<T>): T? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun execute(statement: String): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun setAutoCommit() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun setAutoCommit(flag: Boolean) {
+        connection.autoCommit = flag   
     }
 
     override fun begin() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        connection.beginRequest()
     }
 
     override fun commit() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        connection.commit()
     }
 
     override fun rollback() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        connection.rollback()
     }
 
 }

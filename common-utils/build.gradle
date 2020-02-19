@@ -24,19 +24,10 @@ test {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "org.jetbrains.kotlin:kotlin-reflect"
-    implementation "org.jetbrains.kotlin:kotlin-serialization"
-    implementation "com.zaxxer:HikariCP:3.4.2"
+    implementation "org.slf4j:slf4j-api:$slf4jVersion"
 
-    implementation("com.charleskorn.kaml:kaml:$kamlVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.14.0")
-
-    compile("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    compile("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
 
     testCompile("io.kotlintest:kotlintest-runner-junit5:3.4.2")
-
-    testCompile(project(":common-utils"))
 }
 
 compileKotlin {
