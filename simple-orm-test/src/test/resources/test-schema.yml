@@ -1,0 +1,9 @@
+entities:
+  simpleorm.test.ExampleEntity:
+    table: example
+    fields:
+      longValue:
+        isId: true
+        column: long_value
+      stringValue:
+        column: string_value

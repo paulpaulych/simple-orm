@@ -1,0 +1,25 @@
+entities:
+
+  simpleorm.test.manytoone.Owner:
+    table: owner
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name
+      products:
+        oneToMany:
+          className: simpleorm.test.manytoone.Product
+          keyField: ownerId
+
+  simpleorm.test.manytoone.Product:
+    table: product
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name
+      ownerId:
+        column: owner_id
