@@ -1,27 +1,36 @@
 package simpleorm.core.jdbc
 
-import simpleorm.core.mapper.BeanRawMapper
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 
 interface JdbcOperations{
 
+    fun <T: Any> execute(connectionCallBack: ConnectionCallBack<T>): T
 
-    fun <T: Any> queryForList(query: String, mapper: BeanRawMapper<T>): List<T>
-    fun <T: Any> queryForList(prepared: String, params: Map<String, Any>,  mapper: BeanRawMapper<T>): List<T>
+    fun <T: Any> execute(statementCallback: StatementCallBack<T>): T
 
-    fun queryForResultSet(query: String): ResultSet
-    fun queryForResultSet(query: String, params: Map<String, Any>): ResultSet
+    fun execute(sql: String)
 
-    fun <T: Any> queryForObject(query: String, mapper: BeanRawMapper<T>): T?
-    fun <T: Any> queryForObject(query: String, params: Map<String, Any>, mapper: BeanRawMapper<T>): T?
+    fun query(sql: String, onResultCallback: OnResultCallback)
 
-    fun executeUpdate(statement: String): Int
+    fun <T : Any> query(sql: String, resultSetExtractor: ResultSetExtractor<T>): List<T>
 
-    fun setAutoCommit(flag: Boolean)
+    fun <T: Any> query(psc: PreparedStatementCreator, pss: PreparedStatementSetter, rse: ResultSetExtractor<T>): List<T>
 
-    fun begin()
-    fun commit()
-    fun rollback()
+    fun <T: Any> queryForObject(sql: String, rse: ResultSetExtractor<T>): T?
+
+    fun <T: Any> queryForList(sql: String, rse: ResultSetExtractor<T>): List<T>
+
+    fun <T: Any> queryForObject(psc: PreparedStatementCreator, pss: PreparedStatementSetter, rse: ResultSetExtractor<T>): T?
+
+    fun <T: Any> queryForList(psc: PreparedStatementCreator, pss: PreparedStatementSetter, rse: ResultSetExtractor<T>): List<T>
+
+    fun queryForResultSet(sql: String): ResultSet
+
+    fun queryForResultSet(psc: PreparedStatementCreator, pss: PreparedStatementSetter): ResultSet
+
+    fun executeUpdate(sql: String): Int
+
+    fun executeUpdate(psc: PreparedStatementCreator, pss: PreparedStatementSetter): Int
 
 }

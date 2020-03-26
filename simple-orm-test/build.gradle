@@ -37,7 +37,7 @@ dependencies {
 
     testCompile("ch.qos.logback:logback-classic:$logbackClassicVersion")
     testCompile(project(":simple-orm-core"))
-    testCompile(project(":common-utils"))
+    compile(project(":common-utils"))
 }
 
 compileKotlin {
@@ -48,6 +48,7 @@ compileTestKotlin {
 }
 
 allOpen {
+    annotation("paulpaulych.utils.Open")
     annotation("javax.persistence.Entity")
     annotation("javax.persistence.MappedSuperclass")
     annotation("javax.persistence.Embeddable")

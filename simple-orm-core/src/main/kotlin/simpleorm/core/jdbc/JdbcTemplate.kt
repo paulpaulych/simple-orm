@@ -1,66 +1,117 @@
 package simpleorm.core.jdbc
 
-import simpleorm.core.mapper.BeanRawMapper
+import paulpaulych.utils.LoggerDelegate
+import java.sql.Connection
 import java.sql.ResultSet
-import javax.sql.DataSource
 import kotlin.reflect.KClass
 
 class JdbcTemplate(
-    private val dataSource: DataSource
+    private val connectionHolder: ConnectionHolder
 ): JdbcOperations {
 
-    private val connection
-        get() = dataSource.connection
+    private val log by LoggerDelegate()
 
-    override fun <T : Any> queryForList(query: String, mapper: BeanRawMapper<T>): List<T> {
-        val resultSet = connection.createStatement().executeQuery(query)
-        return mapper.convert(resultSet)
+    override fun <T : Any> execute(connectionCallBack: ConnectionCallBack<T>): T {
+        return connectionHolder.doInConnection (connectionCallBack::doInConnection)
     }
 
-    override fun <T : Any> queryForList(prepared: String, params: Map<String, Any>, mapper: BeanRawMapper<T>): List<T> {
-        TODO("not implemented")
-//        val resultSet = connection.prepareStatement(prepared).executeQuery()
-//        return mapper.convert(resultSet)
+    override fun <T : Any> execute(statementCallback: StatementCallBack<T>): T {
+        return execute(object : ConnectionCallBack<T>{
+
+            override fun <T> doInConnection(conn: Connection): T {
+                val stmt = conn.createStatement()
+                return statementCallback.doInStatement(stmt)
+            }
+
+        })
     }
 
-    override fun queryForResultSet(query: String): ResultSet {
-        return connection.createStatement().executeQuery(query)
+    override fun execute(sql: String) {
+        logSql(sql)
+        connectionHolder.doInConnection { it.createStatement().execute(sql) }
     }
 
-    override fun queryForResultSet(query: String, params: Map<String, Any>): ResultSet {
-        TODO("not implemented")
-    }
-
-
-    override fun <T : Any> queryForObject(query: String, mapper: BeanRawMapper<T>): T? {
-        val result = queryForList(query, mapper)
-        if(result.size != 1){
-            error("excepted result row number: 1, got: ${result.size}")
+    override fun query(sql: String, onResultCallback: OnResultCallback) {
+        logSql(sql)
+        connectionHolder.doInConnection {
+            val resultSet = it.createStatement().executeQuery(sql)
+            onResultCallback.doOnResultSet(resultSet)
         }
-        return result.first()
     }
 
-    override fun <T : Any> queryForObject(query: String, params: Map<String, Any>, mapper: BeanRawMapper<T>): T? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun <T : Any> query(sql: String, resultSetExtractor: ResultSetExtractor<T>): List<T> {
+        logSql(sql)
+        return connectionHolder.doInConnection {
+            val resultSet = it.createStatement().executeQuery(sql)
+            resultSetExtractor.extract(resultSet)
+        }
     }
 
-    override fun executeUpdate(statement: String): Int =
-        connection.createStatement().executeUpdate(statement)
-
-    override fun setAutoCommit(flag: Boolean) {
-        connection.autoCommit = flag   
+    override fun <T : Any> query(psc: PreparedStatementCreator, pss: PreparedStatementSetter, rse: ResultSetExtractor<T>): List<T> {
+        return connectionHolder.doInConnection {
+            val preparedStatement = psc.create(it)
+            pss.set(preparedStatement)
+            val resultSet = preparedStatement.executeQuery()
+            rse.extract(resultSet)
+        }
     }
 
-    override fun begin() {
-        connection.beginRequest()
+    override fun <T : Any> queryForObject(sql: String, rse: ResultSetExtractor<T>): T? {
+        val result = queryForList(sql, rse)
+        if(result.size > 1){
+            error("unexpected result rows number: ${result.size}, expected: 1")
+        }
+        return result.firstOrNull()
     }
 
-    override fun commit() {
-        connection.commit()
+    override fun <T : Any> queryForObject(psc: PreparedStatementCreator, pss: PreparedStatementSetter, rse: ResultSetExtractor<T>): T? {
+        val result = queryForList(psc, pss, rse)
+        if(result.size > 1){
+            error("unexpected result rows number: ${result.size}, expected: 1")
+        }
+        return result.firstOrNull()
     }
 
-    override fun rollback() {
-        connection.rollback()
+    override fun <T : Any> queryForList(sql: String, rse: ResultSetExtractor<T>): List<T> {
+        return query(sql, rse)
+    }
+
+    override fun <T : Any> queryForList(psc: PreparedStatementCreator, pss: PreparedStatementSetter, rse: ResultSetExtractor<T>): List<T> {
+        return query(psc, pss, rse)
+    }
+
+    override fun queryForResultSet(sql: String): ResultSet {
+        logSql(sql)
+        return connectionHolder.doInConnection {
+            it.createStatement().executeQuery(sql)
+        }
+    }
+
+    override fun queryForResultSet(psc: PreparedStatementCreator, pss: PreparedStatementSetter): ResultSet {
+        return connectionHolder.doInConnection {
+            val preparedStatement = psc.create(it)
+            pss.set(preparedStatement)
+            preparedStatement.executeQuery()
+        }
+    }
+
+    override fun executeUpdate(sql: String): Int {
+        logSql(sql)
+        return connectionHolder.doInConnection {
+            it.createStatement().executeUpdate(sql)
+        }
+    }
+
+    override fun executeUpdate(psc: PreparedStatementCreator, pss: PreparedStatementSetter): Int {
+        return connectionHolder.doInConnection {
+            val preparedStatement = psc.create(it)
+            pss.set(preparedStatement)
+            preparedStatement.executeUpdate()
+        }
+    }
+
+    private fun logSql(sql: String){
+        log.debug("executing sql: ${sql.replace("\n", " ")}")
     }
 
 }

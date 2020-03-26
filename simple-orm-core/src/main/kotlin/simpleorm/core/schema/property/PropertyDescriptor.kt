@@ -1,3 +1,7 @@
 package simpleorm.core.schema.property
 
-interface PropertyDescriptor
+import kotlin.reflect.KProperty1
+
+abstract class PropertyDescriptor<T: Any>(
+    val kProperty: KProperty1<Any, T?>
+)

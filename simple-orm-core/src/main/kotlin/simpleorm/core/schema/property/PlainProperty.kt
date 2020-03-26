@@ -1,7 +1,9 @@
 package simpleorm.core.schema.property
 
-open class PlainProperty(
-    val column: String
-): PropertyDescriptor
+import kotlin.reflect.KProperty1
 
-class IdProperty(column: String): PlainProperty(column)
+open class PlainProperty<T: Any>(
+        kProperty: KProperty1<Any, T>,
+        val column: String
+): PropertyDescriptor<T>(kProperty)
+

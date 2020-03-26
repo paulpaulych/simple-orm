@@ -1,31 +1,33 @@
 package simpleorm.core.schema
 
 import simpleorm.core.schema.property.IdProperty
-import simpleorm.core.schema.property.OneToManyProperty
 import simpleorm.core.schema.property.PlainProperty
 import simpleorm.core.schema.property.PropertyDescriptor
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-data class EntityDescriptor<T: Any> (
-    val table: String,
-    val properties: Map<KProperty1<T, *>, PropertyDescriptor>
+data class EntityDescriptor<T: Any>(
+        val kClass: KClass<T>,
+        val table: String,
+        val properties: Map<KProperty1<T, *>, PropertyDescriptor<*>>
 ){
 
-    val plainProperties: Map<KProperty1<T, *>, PlainProperty>
-        get() = properties.filter { it.value is PlainProperty }.map { it.key to it.value as PlainProperty }.toMap()
+    val idProperty: IdProperty<*>
 
-    val oneToManyProperties: Map<KProperty1<T, *>, OneToManyProperty>
-        get() = properties.filter { it.value is OneToManyProperty }.map { it.key to it.value as OneToManyProperty }.toMap()
+    val plainProperties = properties
+            .filter { it.value is PlainProperty<*> }
+            .mapValues { it.value as PlainProperty<Any> }
+            .mapKeys { it.key as KProperty1<Any, *> }
 
-    //TODO: проверить что отношение property-column - биекция
-    val propertyByColumn = plainProperties.map { it.value.column to it.key }.toMap()
+    init{
+        val rawIdProp = properties.values.find{ it is IdProperty}
+                ?: error("id property not specified for $kClass")
+        idProperty = rawIdProp as IdProperty<*>
+    }
 
-    val idProperty: Pair<KProperty1<T, *>, IdProperty>
-
-    init {
-        val ids = properties.filter { it.value is IdProperty }
-        if(ids.size != 1) error("expected ID properties count: 1, got: ${ids.size} ")
-        idProperty =  ids.toList().first() as Pair<KProperty1<T, *>, IdProperty>
+    fun getPropertyDescriptor(kProperty: KProperty1<*, *>): PropertyDescriptor<*> {
+        return properties[kProperty]
+                ?: error("property descriptor not found")
     }
 
 }
