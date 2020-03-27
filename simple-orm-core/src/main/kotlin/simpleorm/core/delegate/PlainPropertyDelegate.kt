@@ -3,7 +3,6 @@ package simpleorm.core.delegate
 import paulpaulych.utils.LoggerDelegate
 import simpleorm.core.jdbc.JdbcOperations
 import simpleorm.core.jdbc.ResultSetExtractor
-import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 class PlainPropertyDelegate<T : Any>(

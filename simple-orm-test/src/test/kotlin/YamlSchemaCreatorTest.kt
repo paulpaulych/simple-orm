@@ -7,7 +7,6 @@ class YamlSchemaCreatorTest: FunSpec(){
 
         test("rawSchemaTest"){
 
-            TODO("not implemented")
 //            val loadText = ResourceLoader.loadText("test-schema.yml")
 //            YamlSchemaCreator(loadText).create() shouldBe OrmSchema(
 //                    mapOf(Example::class to EntityDescriptor(

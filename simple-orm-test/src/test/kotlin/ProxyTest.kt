@@ -12,18 +12,29 @@ import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.javaMethod
 import kotlin.reflect.jvm.kotlinFunction
 
+class ProxyTest : FunSpec(){
 
-@Open
-data class Foo(
-        val id: Long,
-        val name: String
-){
-    fun hello(s: String): String{
-        return "Hello, $s!"
+    init {
+        test("getter interception"){
+            val enhancer = Enhancer()
+            enhancer.setSuperclass(Foo::class.java)
+            enhancer.setCallback(TestEntityProxy(Foo::class))
+            println(Foo::class.java.constructors.map { it.kotlinFunction?.parameters })
+            val proxyInstance = enhancer.create(
+                    arrayOf(Long::class.java, String::class.java),
+                    arrayOf(1L, "FooName")
+            ) as Foo
+
+            proxyInstance shouldBe Foo(1L, "FooName")
+            proxyInstance.hello("h") shouldBe "h"
+        }
     }
+
 }
 
-class TestEntityProxy(
+
+
+private class TestEntityProxy(
         private val kClass: KClass<*>
 ):MethodInterceptor{
 
@@ -50,21 +61,12 @@ class TestEntityProxy(
     }
 }
 
-class ProxyTest : FunSpec(){
-
-    init {
-        test("getter interception"){
-            val enhancer = Enhancer()
-            enhancer.setSuperclass(Foo::class.java)
-            enhancer.setCallback(TestEntityProxy(Foo::class))
-            println(Foo::class.java.constructors.map { it.kotlinFunction?.parameters })
-            val proxyInstance = enhancer.create(
-                    arrayOf(Long::class.java, String::class.java),
-                    arrayOf(1L, "FooName")
-            ) as Foo
-
-            proxyInstance shouldBe Foo(1L, "FooName")
-        }
+@Open
+private data class Foo(
+        val id: Long,
+        val name: String
+){
+    fun hello(s: String): String{
+        return "Hello, $s!"
     }
-
 }

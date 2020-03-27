@@ -74,6 +74,7 @@ class CglibDelegateProxyGenerator(
             Int::class -> return Short.MIN_VALUE as T
             Long::class -> return Short.MIN_VALUE as T
             String::class -> return "DEFAULTVALUE. IF YOU SEE THIS PLEASE REPORT TO MAINTAINERS" as T
+            List::class -> return listOf<Any>() as T
             else -> error("$kClass cannot be field of entity")
         }
     }
