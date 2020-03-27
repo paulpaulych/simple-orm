@@ -7,8 +7,10 @@ import simpleorm.core.schema.EntityDescriptor
 import simpleorm.core.schema.OrmSchema
 import simpleorm.core.schema.SchemaCreator
 import simpleorm.core.schema.property.IdProperty
+import simpleorm.core.schema.property.OneToManyProperty
 import simpleorm.core.schema.property.PlainProperty
 import simpleorm.core.schema.property.PropertyDescriptor
+import simpleorm.core.utils.property
 import kotlin.random.Random
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -58,7 +60,15 @@ class YamlSchemaCreator(
                     raw.column
             )
         }
-        TODO("one to many!!!")
+        if(raw.oneToMany != null){
+            val manyClass = Class.forName(raw.oneToMany.className).kotlin as KClass<Any>
+            return OneToManyProperty(
+                    kProperty as KProperty1<Any, Any>,
+                    manyClass,
+                    manyClass.property(raw.oneToMany.keyField)
+            )
+        }
+        error("invalid schema")
     }
 
 }

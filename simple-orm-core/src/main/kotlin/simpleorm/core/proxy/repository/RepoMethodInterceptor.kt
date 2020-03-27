@@ -18,6 +18,7 @@ import simpleorm.core.utils.method
 import java.lang.reflect.Method
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.javaMethod
+import simpleorm.core.save as saveGlobal
 
 /**
  * Cglib Interceptor for [ISimpleOrmRepo]
@@ -51,9 +52,10 @@ class RepoMethodInterceptor(
     }
 
     private fun findById(requiredId: Any): Any? {
+
         val idClass = entityDescriptor.idProperty.kProperty.returnType.classifier
         if(requiredId::class != idClass){
-            throw IllegalArgumentException("required id type is $idClass")
+            throw IllegalArgumentException("required id type for ${entityDescriptor.kClass} is $idClass")
         }
         val id = jdbc.queryForObject(
                 queryGenerationStrategy.select(
@@ -99,6 +101,12 @@ class RepoMethodInterceptor(
                         listOf(EqualsCondition(entityDescriptor.idProperty.column, id.toString()))
                 )
         )
+
+        entityDescriptor.oneToManyProperties.forEach{
+            saveGlobal(it.value.kClass, it.key.get(obj) as Any)
+        }
+
+
         return findById(id)!!
     }
 
@@ -125,10 +133,19 @@ class RepoMethodInterceptor(
                         values
                 )
         )
+
+        entityDescriptor.oneToManyProperties.values.forEach{pd->
+            val manyValues = pd.kProperty.get(obj) as Iterable<Any>
+            manyValues.forEach{
+                saveGlobal(pd.kClass, it)
+            }
+        }
+
         return findById(id)!!
     }
 
     private fun save(obj: Any): Any {
+        log.trace("save called for $obj")
 
         val oldId = entityDescriptor.idProperty.kProperty.get(obj)
                 ?: return insert(obj)

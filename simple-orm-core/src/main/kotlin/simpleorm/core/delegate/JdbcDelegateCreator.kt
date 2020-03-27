@@ -7,6 +7,7 @@ import simpleorm.core.sql.QueryGenerationStrategy
 import simpleorm.core.sql.condition.EqualsCondition
 import simpleorm.core.schema.EntityDescriptor
 import simpleorm.core.schema.property.IdProperty
+import simpleorm.core.schema.property.OneToManyProperty
 import simpleorm.core.schema.property.PlainProperty
 import simpleorm.core.schema.property.PropertyDescriptor
 
@@ -35,9 +36,14 @@ class JdbcDelegateCreator(
                     CglibRseProxyGenerator(pd).create()
             ) as GenericDelegate<T>
         }
-        TODO("oneToMany delegate creation not implemented")
+        if(pd is OneToManyProperty<T>){
+            log.trace("creating OneToManyPropertyDelegate for ${pd.kProperty}...")
+            return OneToManyPropertyDelegate(
+                pd,
+                initialValue
+            ) as GenericDelegate<T>
+        }
+        error("unknown property descriptor type ${pd::class}")
     }
-
-
 
 }
