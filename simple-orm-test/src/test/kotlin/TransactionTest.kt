@@ -170,8 +170,6 @@ class TransactionTest : FunSpec(){
 
 }
 
-
-
 fun threadWithException(block: ()->Unit): Thread{
     val trd = thread(start = false, block = block)
     var e: Throwable
