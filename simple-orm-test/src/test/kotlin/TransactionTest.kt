@@ -133,12 +133,9 @@ class TransactionTest : FunSpec(){
             }
         }
 
-        test("serializable isolation"){
-
+        test("serializable isolation 1"){
             val lock = Object()
-
             var read: Person? = null
-
             val thread = thread(start = true){
                 synchronized(lock){
                     inTransaction {
@@ -147,23 +144,65 @@ class TransactionTest : FunSpec(){
                             lock.wait()
                         }
                         read = Person::class.findById(5L)
-                        read shouldBe Person(5, "Person5", 21)
 
                     }
                 }
 
             }
-
+            delay(600)
             inTransaction {
                 val saved = save(Person(null, "Person5", 21))
                 saved shouldBe Person(5, "Person5", 21)
-            }
 
+                synchronized(lock){
+                    println("notifying")
+                    lock.notifyAll()
+                }
+            }
 
             //Todo: нормально синхронизовать потоки
             delay(3000L)
+            read shouldBe Person(5, "Person5", 21)
+
         }
 
+
+        test("serializable isolation 2"){
+            val lock = Object()
+            var read: Person? = null
+            val thread = thread(start = true){
+                synchronized(lock){
+                    inTransaction {
+                        if(read == null) {
+                            println("waiting")
+                            lock.wait()
+                        }
+                        println("reading")
+                        read = Person::class.findById(6L)
+                        lock.notifyAll()
+                    }
+                }
+            }
+            delay(600)
+            inTransaction {
+                println("creating")
+                val saved = save(Person(null, "Person6", 21))
+                saved shouldBe Person(6, "Person6", 21)
+
+                synchronized(lock){
+                    println("notifying")
+                    lock.notifyAll()
+                    lock.wait()
+                }
+
+                println("changing")
+                save(Person(6, "Person6", 23))
+            }
+
+            //Todo: нормально синхронизовать потоки
+            read shouldBe null
+
+        }
 
     }
 
