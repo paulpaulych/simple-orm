@@ -3,13 +3,10 @@ package simpleorm.core.proxy.resulsetextractor
 import net.sf.cglib.proxy.*
 import simpleorm.core.jdbc.ResultSetExtractor
 import simpleorm.core.mapper.PrimitivesOnlyResultExtractHelper
-import simpleorm.core.schema.property.IdProperty
 import simpleorm.core.schema.property.PlainProperty
-import simpleorm.core.schema.property.PropertyDescriptor
 import java.lang.reflect.Method
 import java.sql.ResultSet
 import kotlin.reflect.KClass
-import kotlin.reflect.jvm.javaMethod
 
 class CglibRseProxyGenerator<T: Any>(
         private val propertyDescriptor: PlainProperty<T>

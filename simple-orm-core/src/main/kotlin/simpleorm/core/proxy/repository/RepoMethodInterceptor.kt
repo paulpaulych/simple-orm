@@ -13,10 +13,7 @@ import simpleorm.core.sql.QueryGenerationStrategy
 import simpleorm.core.sql.condition.EqualsCondition
 import simpleorm.core.utils.method
 import java.lang.reflect.Method
-import java.sql.Connection
 import java.sql.PreparedStatement
-import java.sql.ResultSet
-import java.sql.Statement
 import kotlin.reflect.jvm.javaMethod
 import simpleorm.core.save as saveGlobal
 
@@ -47,6 +44,9 @@ class RepoMethodInterceptor(
         }
         if(method == ISimpleOrmRepo::class.method("save").javaMethod){
             return save(args.first())
+        }
+        if(method == ISimpleOrmRepo::class.method("query").javaMethod){
+            return query(args[0] as String, args[1] as List<Any>)
         }
         error("unsupported operation: ${method.name}")
     }
@@ -169,6 +169,17 @@ class RepoMethodInterceptor(
         ))
     }
 
+    private fun query(sql: String, params: List<Any> = listOf()): List<Any>{
+        return jdbc.doInConnection {
+            val ps = it.prepareStatement(sql)
+            val ids = rse.extract(
+                    PreparedStatementValuesSetter(params.toList())
+                            .set(ps)
+                            .executeQuery()
+            )
+            ids.map{ id -> proxyGenerator.createProxyClass(entityDescriptor.kClass, id)}
+        }
+    }
 
 }
 

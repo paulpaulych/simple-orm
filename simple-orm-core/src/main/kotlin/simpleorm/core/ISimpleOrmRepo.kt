@@ -10,4 +10,6 @@ interface ISimpleOrmRepo<T: Any, ID: Any>{
 
     fun delete(id: ID)
 
+    fun query(sql: String, args: List<Any>): List<T>
+
 }
