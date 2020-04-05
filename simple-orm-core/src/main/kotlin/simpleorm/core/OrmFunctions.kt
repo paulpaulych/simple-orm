@@ -1,5 +1,6 @@
 package simpleorm.core
 
+import simpleorm.core.jdbc.JdbcOperations
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -8,15 +9,24 @@ interface IRepoRegistry{
 }
 
 class RepoRegistry(
-        private val map: Map<KClass<*>, ISimpleOrmRepo<*, *>> = mapOf()
+        private val map: Map<KClass<*>, ISimpleOrmRepo<*, *>> = mapOf(),
+        private val jdbc: JdbcOperations
 ): IRepoRegistry{
 
     override fun <T : Any> findRepo(kClass: KClass<T>): ISimpleOrmRepo<T, Any> {
         val repo = map[kClass]
-                ?: throw RuntimeException("repo not found for ${kClass.qualifiedName}")
+                ?:defaultRepo(kClass)
+//                ?: throw RuntimeException("repo not found for ${kClass.qualifiedName}")
         return repo as ISimpleOrmRepo<T, Any>
     }
 
+    private fun <T: Any> defaultRepo(kClass: KClass<T>): ISimpleOrmRepo<*, *>{
+        return DefaultRepo<T, Any>(
+                jdbc,
+                kClass,
+                DefaultResultSetExtractor(kClass)
+        )
+    }
 }
 
 object RepoRegistryProvider{

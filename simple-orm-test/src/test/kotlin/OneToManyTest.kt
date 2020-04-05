@@ -76,7 +76,8 @@ class OneToManyTest: FunSpec() {
                 mapOf(
                         Product::class to repoProxyGenerator.createRepoProxy(Product::class),
                         Owner::class to repoProxyGenerator.createRepoProxy(Owner::class)
-                )
+                ),
+                jdbc
         )
 
         test("findById"){

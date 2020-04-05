@@ -78,7 +78,8 @@ class OrmFunctionsTest : FunSpec(){
             mapOf(
                     Example::class to repoProxyGenerator.createRepoProxy(Example::class),
                     Person::class to repoProxyGenerator.createRepoProxy(Person::class)
-            )
+            ),
+            jdbc
         )
 
         test("findById"){
@@ -150,6 +151,19 @@ class OrmFunctionsTest : FunSpec(){
             result2 shouldBe listOf(Person(3, "Bob2", 31))
         }
 
+        test("not described class query"){
+            jdbc.execute("create table NotDescribed(id bigint auto_increment, name text)")
+            jdbc.execute("insert into NotDescribed(name) values('first')")
+
+            val res = NotDescribed::class.query("select id, name from NotDescribed")
+            res[0] shouldBe NotDescribed(1, "first")
+        }
+
     }
+
+    data class NotDescribed(
+         val id: Long? = null,
+         val name: String
+    )
 
 }

@@ -79,7 +79,8 @@ class TransactionTest : FunSpec(){
         RepoRegistryProvider.repoRegistry = RepoRegistry(
                 mapOf(
                         Person::class to repoProxyGenerator.createRepoProxy(Person::class)
-                )
+                ),
+                jdbc
         )
 
 //        test("without transaction"){
