@@ -39,27 +39,22 @@ class OneToManyTest: FunSpec() {
         jdbc.execute("drop table owner if exists")
         jdbc.execute("create table owner(id bigint primary key, name text)")
 
-        jdbc.executeUpdate("insert into owner values(1, 'OWNER_1')")
-        jdbc.executeUpdate("insert into owner values(2, 'OWNER_2')")
+        jdbc.execute("insert into owner values(1, 'OWNER_1')")
+        jdbc.execute("insert into owner values(2, 'OWNER_2')")
 
-        jdbc.executeUpdate("insert into product values(1, 'PRODUCT_1', 1)")
-        jdbc.executeUpdate("insert into product values(2, 'PRODUCT_2', 1)")
+        jdbc.execute("insert into product values(1, 'PRODUCT_1', 1)")
+        jdbc.execute("insert into product values(2, 'PRODUCT_2', 1)")
 
         jdbc.execute("create sequence simpleorm start with 3")
 
         test("sequence"){
-            val next = jdbc.queryForObject("select next value for simpleorm", object : ResultSetExtractor<Long> {
-
-                override fun extract(resultSet: ResultSet): List<Long> {
-                    val list = mutableListOf<Long>()
-                    while(resultSet.next()){
-                        list.add(resultSet.getLong(1))
-                    }
-                    return list
+            val next = jdbc.queryForObject("select nextval('simpleorm')"){
+                val list = mutableListOf<Long>()
+                while(it.next()){
+                    list.add(it.getLong(1))
                 }
-
-            })
-
+                list
+            }
             next shouldBe 3
         }
 
@@ -116,14 +111,14 @@ class OneToManyTest: FunSpec() {
 
         test("save new"){
             val owner = Owner(null,"OWNER_3", listOf())
-            save(owner) shouldBe Owner(4, "OWNER_3", listOf())
+            save(owner) shouldBe Owner(3, "OWNER_3", listOf())
 
             val product = Product(null, "PRODUCT_3", 4)
 
-            save(product) shouldBe Product(5, "PRODUCT_3", 4)
+            save(product) shouldBe Product(3, "PRODUCT_3", 4)
 
-            Owner::class.findById(4L) shouldBe Owner(4, "OWNER_3", listOf(
-                    Product(5, "PRODUCT_3", 4)
+            Owner::class.findById(3L) shouldBe Owner(3, "OWNER_3", listOf(
+                    Product(3, "PRODUCT_3", 3)
             ))
 
 
@@ -131,7 +126,7 @@ class OneToManyTest: FunSpec() {
 
         test("change owner"){
 
-            val oldOwner = Owner::class.findById(4L)
+            val oldOwner = Owner::class.findById(3L)
                     ?: error("not found")
 
             val newOwner = Owner(
@@ -144,9 +139,9 @@ class OneToManyTest: FunSpec() {
                 oldOwner.products.map {it.copy(ownerId = id)}.forEach{ save(it) }
             }
             Owner(
-                    6,
+                    4,
                     "new owner",
-                    listOf(Product(5, "PRODUCT_3", 6))
+                    listOf(Product(3, "PRODUCT_3", 4))
             )
         }
 

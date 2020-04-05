@@ -18,7 +18,7 @@ class PlainPropertyDelegate<T : Any>(
 
     override fun getValue(thisRef: Any, property: KProperty<*>): T? {
         log.trace("delegate getter invoked for $property")
-        return jdbc.queryForObject(sql.replace("?", id.toString()), rse)
+        return jdbc.queryForObject(sql.replace("?", id.toString()), rse::extract)
     }
 
     override fun setValue(thisRef: Any, property: KProperty<*>, value: T?) {

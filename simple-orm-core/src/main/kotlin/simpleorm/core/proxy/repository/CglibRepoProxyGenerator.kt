@@ -23,7 +23,7 @@ class CglibRepoProxyGenerator(
                 jdbc,
                 queryGenerationStrategy,
                 proxyGenerator,
-                SequenceIdGenerator(jdbc)::generateId
+                SimpleOrmSequenceIdGenerator(jdbc)::generateId
         ))
         return enhancer.create() as ISimpleOrmRepo<T, *>
     }

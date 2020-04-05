@@ -35,6 +35,7 @@ dependencies {
 
     testCompile group: 'com.h2database', name: 'h2', version: '1.4.200'
 
+    testCompile "cglib:cglib:3.3.0"
     testCompile("ch.qos.logback:logback-classic:$logbackClassicVersion")
     testCompile(project(":simple-orm-core"))
     compile(project(":common-utils"))

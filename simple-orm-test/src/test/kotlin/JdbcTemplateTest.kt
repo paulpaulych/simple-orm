@@ -10,21 +10,6 @@ import simpleorm.test.Example
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 
-private class ExampleRse: ResultSetExtractor<Example>{
-
-    override fun extract(resultSet: ResultSet): List<Example> {
-        val out = mutableListOf<Example>()
-        while (resultSet.next()){
-            out.add(Example(
-                    resultSet.getLong("long_value"),
-                    resultSet.getString("string_value")
-            ))
-        }
-        return out
-    }
-
-}
-
 class JdbcTemplateTest: FunSpec(){
 
     override fun testCaseOrder(): TestCaseOrder? = TestCaseOrder.Sequential
@@ -43,12 +28,20 @@ class JdbcTemplateTest: FunSpec(){
         test("insert and select"){
 
             jdbc.execute("create table example(long_value bigint, string_value text)")
-            jdbc.executeUpdate("insert into example values(1, 'hello')") shouldBe 1
-            jdbc.executeUpdate("insert into example values(2, 'halo')") shouldBe 1
+            jdbc.update("insert into example values(1, 'hello')") shouldBe 1
+            jdbc.update("insert into example values(2, 'halo')") shouldBe 1
 
             val exampleList = jdbc.queryForList(
-                    "select long_value, string_value from example",
-                    ExampleRse())
+                    "select long_value, string_value from example"){
+                val out = mutableListOf<Example>()
+                while (it.next()){
+                    out.add(Example(
+                            it.getLong("long_value"),
+                            it.getString("string_value")
+                    ))
+                }
+                out
+            }
 
             exampleList shouldBe listOf(
                     Example(

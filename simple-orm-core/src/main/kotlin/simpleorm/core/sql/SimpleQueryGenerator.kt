@@ -9,20 +9,21 @@ class SimpleQueryGenerator: QueryGenerationStrategy {
         return FilteringQuery(query, conditions).toString()
     }
 
-    override fun insert(table: String, columns: List<String>, values: List<Any>): String {
-        return InsertStatement(
-                table,
-                columns.mapIndexed{ index, s ->
-                    s to values[index]
-                }.toMap()).toString()
+    override fun insert(table: String, columns: List<String>): String {
+        val keyList = columns.fold("") { acc, s ->
+            acc + "${if (acc == "") "" else ", "}$s"
+        }
+
+        val valuePlaceholders = Array(columns.size){"?"}.joinToString(", ")
+
+        return """insert into $table ($keyList)
+values ($valuePlaceholders)""".trimIndent()
     }
 
-    override fun update(table: String, columns: List<String>, values: List<Any>, conditions: List<Condition>): String {
+    override fun update(table: String, columns: List<String>, conditions: List<Condition>): String {
         return UpdateStatement(
                 table,
-                columns.mapIndexed{ index, s ->
-                    s to values[index]
-                }.toMap(),
+                columns,
                 conditions
         ).toString()
     }

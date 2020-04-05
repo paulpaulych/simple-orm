@@ -4,19 +4,19 @@ import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
 import paulpaulych.utils.LoggerDelegate
 import simpleorm.core.ISimpleOrmRepo
-import simpleorm.core.jdbc.JdbcOperations
-import simpleorm.core.jdbc.ResultSetExtractor
+import simpleorm.core.jdbc.*
 import simpleorm.core.proxy.ProxyGenerator
 import simpleorm.core.proxy.resulsetextractor.CglibRseProxyGenerator
 import simpleorm.core.schema.EntityDescriptor
 import simpleorm.core.schema.property.IdProperty
-import simpleorm.core.schema.property.PlainProperty
 import simpleorm.core.sql.QueryGenerationStrategy
-import simpleorm.core.sql.UpdateStatement
 import simpleorm.core.sql.condition.EqualsCondition
 import simpleorm.core.utils.method
 import java.lang.reflect.Method
-import kotlin.reflect.KClass
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+import java.sql.Statement
 import kotlin.reflect.jvm.javaMethod
 import simpleorm.core.save as saveGlobal
 
@@ -63,7 +63,7 @@ class RepoMethodInterceptor(
                         listOf(entityDescriptor.idProperty.column),
                         listOf(EqualsCondition(entityDescriptor.idProperty.column, requiredId))
                 ),
-                rse
+                rse::extract
         )
         id?:let {
             return null
@@ -77,7 +77,7 @@ class RepoMethodInterceptor(
                         entityDescriptor.table,
                         listOf(entityDescriptor.idProperty.column)
                 ),
-                rse
+                rse::extract
         )
         return ids.map { proxyGenerator.createProxyClass(entityDescriptor.kClass, it) }
     }
@@ -93,46 +93,49 @@ class RepoMethodInterceptor(
                     columns.add(it.first)
                     values.add(it.second)
                 }
-        jdbc.executeUpdate(
-                queryGenerationStrategy.update(
+        val sql = queryGenerationStrategy.update(
                         entityDescriptor.table,
                         columns,
-                        values,
                         listOf(EqualsCondition(entityDescriptor.idProperty.column, id.toString()))
-                )
         )
+
+        jdbc.doInConnection{
+            var ps = PreparedUpdatePSCreator(sql).create(it)
+            ps = PreparedStatementValuesSetter(values)
+                    .set(ps)
+            ps.executeUpdate()
+        }
 
         entityDescriptor.oneToManyProperties.forEach{
             saveGlobal(it.value.kClass, it.key.get(obj) as Any)
         }
-
-
-        return findById(id)!!
+        return findById(id)
+                ?: error("row with id $id not found")
     }
 
-
     private fun insert(obj: Any): Any{
-        val id = idGenerator.invoke()
 
         val columns = mutableListOf<String>()
         val values = mutableListOf<String>()
         entityDescriptor.plainProperties
-                .map {
-                    if(it.value is IdProperty<*>)
-                        it.value.column to  id.toString()
-                    else it.value.column to it.key.get(obj).toString()
-                }.forEach{
+                .filterValues { it !is IdProperty<Any>}
+                .map { it.value.column to it.key.get(obj).toString() }
+                .forEach{
                     columns.add(it.first)
                     values.add(it.second)
                 }
 
-        jdbc.executeUpdate(
-                queryGenerationStrategy.insert(
-                        entityDescriptor.table,
-                        columns,
-                        values
-                )
-        )
+        val sql = queryGenerationStrategy.insert(entityDescriptor.table, columns)
+
+        val id = jdbc.doInConnection{
+            var ps = it.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)
+            ps = PreparedStatementValuesSetter(values)
+                    .set(ps)
+            ps.executeUpdate()
+            val keys = ps.generatedKeys
+            keys.next()
+            keys.getLong(1)
+        }
 
         entityDescriptor.oneToManyProperties.values.forEach{pd->
             val manyValues = pd.kProperty.get(obj) as Iterable<Any>
@@ -154,7 +157,7 @@ class RepoMethodInterceptor(
     }
 
     private fun delete(id: Any) {
-        jdbc.executeUpdate(
+        jdbc.update(
                 queryGenerationStrategy.delete(
                     entityDescriptor.table,
                     listOf(
@@ -168,3 +171,4 @@ class RepoMethodInterceptor(
 
 
 }
+

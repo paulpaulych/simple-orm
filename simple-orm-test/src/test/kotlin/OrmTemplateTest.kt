@@ -37,28 +37,25 @@ class OrmTemplateTest : FunSpec(){
         )
 
         jdbc.execute("drop table example if exists")
-        jdbc.execute("create table example(long_value bigint, string_value text)")
-        jdbc.executeUpdate("insert into example values(1, 'hello')")
-        jdbc.executeUpdate("insert into example values(2, 'halo')")
+        jdbc.execute("create table example(long_value bigint auto_increment, string_value text)")
+        jdbc.execute("insert into example(string_value) values('hello')")
+        jdbc.execute("insert into example(string_value) values('halo')")
 
 
         jdbc.execute("drop table person if exists")
-        jdbc.execute("create table person(id bigint, name text, age integer)")
+        jdbc.execute("create table person(id bigint auto_increment, name text, age integer)")
 
         jdbc.execute("create sequence simpleorm start with 3")
 
         test("sequence"){
-            val next = jdbc.queryForObject("select next value for simpleorm", object : ResultSetExtractor<Long>{
-
-                override fun extract(resultSet: ResultSet): List<Long> {
-                    val list = mutableListOf<Long>()
-                    while(resultSet.next()){
-                        list.add(resultSet.getLong(1))
-                    }
-                    return list
+            val next = jdbc.queryForObject("select next value for simpleorm"){
+                val list = mutableListOf<Long>()
+                while(it.next()){
+                    list.add(it.getLong(1))
                 }
+                list
+            }
 
-            })
 
             next shouldBe 3
         }
@@ -128,19 +125,17 @@ class OrmTemplateTest : FunSpec(){
 
         test("save new"){
             val example = save(Example(null, "hello"))
-            example shouldBe Example(4, "hello")
+            example shouldBe Example(3, "hello")
         }
 
         test("save existing"){
-            val example = save(Example(4, "goodbye"))
-            example shouldBe Example(4, "goodbye")
+            val example = save(Example(3, "goodbye"))
+            example shouldBe Example(3, "goodbye")
         }
 
         test("person"){
             val person = save(Person(null, "Karl", 18))
-            person shouldBe Person(5, "Karl", 18)
-
-
+            person shouldBe Person(1, "Karl", 18)
         }
 
     }

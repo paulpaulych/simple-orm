@@ -4,7 +4,7 @@ import simpleorm.core.sql.condition.Condition
 
 data class UpdateStatement(
         val table: String,
-        val values: Map<String, Any?>,
+        val values: List<String>,
         val conditions: List<Condition>
 ): SqlFragment {
 
@@ -13,8 +13,8 @@ data class UpdateStatement(
             """$acc
     ${if (acc == "") "" else "and"} $cond""".trimIndent()
         }
-        val values = values.toList().fold("") { acc, (k, v)  ->
-            acc + "${if (acc == "") "" else ", "}$k = ${if(v is Number) v else "'$v'"}"
+        val values = values.toList().fold("") { acc, k ->
+            acc + "${if (acc == "") "" else ", "}$k = ?"
         }
         return """update $table set $values
 where $conditions""".trimIndent()

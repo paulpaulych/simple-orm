@@ -51,17 +51,14 @@ class TransactionTest : FunSpec(){
         jdbc.execute("create sequence simpleorm start with 3")
 
         test("sequence"){
-            val next = jdbc.queryForObject("select next value for simpleorm", object : ResultSetExtractor<Long> {
-
-                override fun extract(resultSet: ResultSet): List<Long> {
-                    val list = mutableListOf<Long>()
-                    while(resultSet.next()){
-                        list.add(resultSet.getLong(1))
-                    }
-                    return list
+            val next = jdbc.queryForObject("select next value for simpleorm") {
+                val list = mutableListOf<Long>()
+                while(it.next()){
+                    list.add(it.getLong(1))
                 }
+                list
+            }
 
-            })
 
             next shouldBe 3
         }

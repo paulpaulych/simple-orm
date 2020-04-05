@@ -5,7 +5,6 @@ import io.kotlintest.specs.FunSpec
 import paulpaulych.utils.ResourceLoader
 import simpleorm.core.sql.condition.EqualsCondition
 import simpleorm.core.sql.FilteringQuery
-import simpleorm.core.sql.InsertStatement
 import simpleorm.core.sql.Query
 
 class SqlGenerationTest: FunSpec(){
