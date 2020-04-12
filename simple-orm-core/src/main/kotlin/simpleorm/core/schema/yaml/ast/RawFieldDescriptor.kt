@@ -7,6 +7,7 @@ data class RawFieldDescriptor(
     val isId: Boolean = false,
     val column: String? = null,
     val oneToMany: RawOneToMany? = null,
-    val manyToMany: RawManyToMany? = null
+    val manyToMany: RawManyToMany? = null,
+    val manyToOne: RawManyToOne? = null
 )
 

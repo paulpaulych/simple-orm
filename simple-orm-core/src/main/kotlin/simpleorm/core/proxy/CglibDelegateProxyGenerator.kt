@@ -1,5 +1,6 @@
 package simpleorm.core.proxy
 
+import io.mockk.mockkClass
 import net.sf.cglib.proxy.Enhancer
 import paulpaulych.utils.LoggerDelegate
 import simpleorm.core.delegate.IDelegateCreator
@@ -55,8 +56,18 @@ class CglibDelegateProxyGenerator(
 
         val indexOfId = constructorArgTypes.indexOfFirst{it.name == entityDescriptor.idProperty.kProperty.name}
 
-        val args = Array(constructorArgTypes.size){
-            if(it == indexOfId) id else defaultValue(constructorArgTypes[it].kotlin, primaryConstructor.parameters[it]!!.type.isMarkedNullable)
+        val args = Array(constructorArgTypes.size){ind->
+            val pName = primaryConstructor.parameters[ind].name
+            val manyToOne = entityDescriptor.manyToOneProperties.values.find { it.kProperty.name == pName }
+            when {
+                ind == indexOfId -> id
+                //TODO: придумать что-то получше для дефофлтного значения
+                manyToOne != null -> {
+                    mockkClass(manyToOne.kClass)
+                }
+                else -> defaultValue(constructorArgTypes[ind].kotlin,
+                        primaryConstructor.parameters[ind]!!.type.isMarkedNullable)
+            }
         }
 
         val proxy = enhancer.create(

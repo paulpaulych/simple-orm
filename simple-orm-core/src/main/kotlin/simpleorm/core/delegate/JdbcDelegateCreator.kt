@@ -2,11 +2,13 @@ package simpleorm.core.delegate
 
 import paulpaulych.utils.LoggerDelegate
 import simpleorm.core.jdbc.JdbcOperations
+import simpleorm.core.jdbc.ResultSetExtractor
 import simpleorm.core.proxy.resulsetextractor.CglibRseProxyGenerator
 import simpleorm.core.sql.QueryGenerationStrategy
 import simpleorm.core.sql.condition.EqualsCondition
 import simpleorm.core.schema.EntityDescriptor
 import simpleorm.core.schema.property.*
+import kotlin.reflect.KProperty1
 
 class JdbcDelegateCreator(
      private val jdbc: JdbcOperations,
@@ -49,7 +51,26 @@ class JdbcDelegateCreator(
                     queryGenerationStrategy
             )as GenericDelegate<T>
         }
+        if(pd is ManyToOneProperty<T>){
+            log.trace("creating ManyToOnePropertyDelegate for ${pd.kProperty}...")
+            return ManyToOnePropertyDelegate(
+                    pd,
+                    initialValue,
+                    jdbc,
+                    queryGenerationStrategy,
+                    ed.table,
+                    ed.idProperty.column,
+                    CglibRseProxyGenerator(
+                            OneToManyPlainAdapter(pd as ManyToOneProperty<Any>)
+                    ).create() as ResultSetExtractor<T>
+            )
+        }
+
         error("unknown property descriptor type ${pd::class}")
     }
 
 }
+
+class OneToManyPlainAdapter(
+        val manyToOneProperty: ManyToOneProperty<Any>
+): PlainProperty<Any>(manyToOneProperty.manyIdProperty as KProperty1<Any, Any>, manyToOneProperty.foreignKeyColumn)

@@ -27,6 +27,11 @@ data class EntityDescriptor<T: Any>(
             .mapValues { it.value as ManyToManyProperty<Any> }
             .mapKeys { it.key as KProperty1<Any, *> }
 
+    val manyToOneProperties = properties
+            .filter { it.value is ManyToOneProperty<*> }
+            .mapValues { it.value as ManyToOneProperty<Any> }
+            .mapKeys { it.key as KProperty1<Any, *> }
+
 
     init{
         val rawIdProp = properties.values.find{ it is IdProperty}

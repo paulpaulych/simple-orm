@@ -93,6 +93,15 @@ class RepoMethodInterceptor(
                     columns.add(it.first)
                     values.add(it.second)
                 }
+
+        entityDescriptor.manyToOneProperties
+                .forEach{ (_, pd) ->
+                    columns.add(pd.foreignKeyColumn)
+                    val manyObj = pd.kProperty.get(obj)
+                            ?: error("cannot access many part of relation")
+                    values.add(pd.manyIdProperty.get(manyObj).toString())
+                }
+
         val sql = queryGenerationStrategy.update(
                         entityDescriptor.table,
                         columns,
@@ -181,6 +190,14 @@ class RepoMethodInterceptor(
                 .forEach{
                     columns.add(it.first)
                     values.add(it.second)
+                }
+
+        entityDescriptor.manyToOneProperties
+                .forEach{ (_, pd) ->
+                    columns.add(pd.foreignKeyColumn)
+                    val manyObj = pd.kProperty.get(obj)
+                            ?: error("cannot access many part of relation")
+                    values.add(pd.manyIdProperty.get(manyObj).toString())
                 }
 
         val sql = queryGenerationStrategy.insert(entityDescriptor.table, columns)

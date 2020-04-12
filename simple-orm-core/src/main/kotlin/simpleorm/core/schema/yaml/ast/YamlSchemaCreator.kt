@@ -8,7 +8,6 @@ import simpleorm.core.schema.OrmSchema
 import simpleorm.core.schema.SchemaCreator
 import simpleorm.core.schema.property.*
 import simpleorm.core.utils.property
-import kotlin.random.Random
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.declaredMemberProperties
@@ -16,6 +15,8 @@ import kotlin.reflect.full.declaredMemberProperties
 class YamlSchemaCreator(
         private val rawText: String
 ): SchemaCreator {
+
+    private val eds = mutableListOf<EntityDescriptor<*>>()
 
     override fun create(): OrmSchema {
         val mapper = ObjectMapper(YAMLFactory())
@@ -34,7 +35,7 @@ class YamlSchemaCreator(
     }
 
     private fun <T: Any> convertRawEntityDescriptor(kClass: KClass<T>, raw: RawEntityDescriptor): EntityDescriptor<T> {
-        return EntityDescriptor(
+        val ed = EntityDescriptor(
                 kClass,
                 raw.table,
                 raw.fields.map{(propName, rawPd)->
@@ -43,6 +44,8 @@ class YamlSchemaCreator(
                     return@map kProperty to convertRawPropertyDescriptor(kProperty, rawPd)
                 }.toMap()
         )
+        eds.add(ed)
+        return ed
     }
 
     private fun <R: Any> convertRawPropertyDescriptor(kProperty: KProperty1<R, *>, raw: RawFieldDescriptor): PropertyDescriptor<Any> {
@@ -74,6 +77,17 @@ class YamlSchemaCreator(
                     raw.manyToMany.leftColumn,
                     raw.manyToMany.rightColumn,
                     rightClass.property(raw.manyToMany.rightKeyField)
+            )
+        }
+        if(raw.manyToOne != null){
+            val kClass = Class.forName(raw.manyToOne.className).kotlin as KClass<Any>
+            val manyIdProperty = eds.find { it.kClass == kClass }?.idProperty
+                    ?: error("")
+            return ManyToOneProperty(
+                    kProperty as KProperty1<Any, Any>,
+                    kClass,
+                    manyIdProperty.kProperty as KProperty1<Any, Any>,
+                    raw.manyToOne.foreignKeyColumn
             )
         }
         error("invalid schema")
