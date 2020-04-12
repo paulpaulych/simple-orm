@@ -29,6 +29,7 @@ class PreparedStatementValuesSetter(
             BigDecimal::class -> ps.setBigDecimal(i, value as BigDecimal)
             Double::class -> ps.setDouble(i, value as Double)
             Float::class -> ps.setFloat(i, value as Float)
+            BigDecimal::class -> ps.setBigDecimal(i, value as BigDecimal)
             else -> error("cannot persist $kClass: setter not found")
         }
     }

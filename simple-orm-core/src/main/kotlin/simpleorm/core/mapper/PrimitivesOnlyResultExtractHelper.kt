@@ -1,5 +1,6 @@
 package simpleorm.core.mapper
 
+import java.math.BigDecimal
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 
@@ -14,6 +15,7 @@ class PrimitivesOnlyResultExtractHelper: ResultExtractHelper {
             Long::class -> { s: String -> resultSet.getLong(s) as T}
             Short::class -> { s: String -> resultSet.getShort(s) as T}
             Byte::class -> { s: String -> resultSet.getByte(s) as T}
+            BigDecimal::class -> {s: String -> resultSet.getBigDecimal(s) as T}
             else -> throw IllegalArgumentException("cannot find extract method for type: $kClass")
         }
     }
