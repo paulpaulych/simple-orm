@@ -7,6 +7,7 @@ import simpleorm.core.delegate.IDelegateCreator
 import simpleorm.core.schema.OrmSchema
 import simpleorm.core.utils.immutableProperties
 import simpleorm.core.utils.mutableProperties
+import java.math.BigDecimal
 import kotlin.reflect.KClass
 import kotlin.reflect.full.cast
 import kotlin.reflect.full.primaryConstructor
@@ -82,8 +83,11 @@ class CglibDelegateProxyGenerator(
         if (nullable) return null
         when(kClass){
             Short::class -> return Short.MIN_VALUE as T
+            Byte::class -> return Byte.MIN_VALUE as T
             Int::class -> return Short.MIN_VALUE as T
             Long::class -> return Short.MIN_VALUE as T
+            Boolean::class -> return false as T
+            BigDecimal::class -> return BigDecimal.ZERO as T
             String::class -> return "DEFAULTVALUE. IF YOU SEE THIS PLEASE REPORT TO MAINTAINERS" as T
             List::class -> return listOf<Any>() as T
             else -> error("$kClass cannot be field of entity")
