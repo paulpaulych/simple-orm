@@ -109,6 +109,64 @@ class RepoMethodInterceptor(
         entityDescriptor.oneToManyProperties.forEach{
             saveGlobal(it.value.kClass, it.key.get(obj) as Any)
         }
+
+        entityDescriptor.manyToManyProperties.forEach {
+            //внесем изменения в связывающую таблицу
+            val beforeObj = findById(id)
+                    ?: error("before obj does not exist")
+
+            val pd = it.value
+            val beforeRights = pd.kProperty.get(beforeObj) as List<Any>
+            val requiredRights = pd.kProperty.get(obj) as List<Any>
+
+            //добавим недостающее
+            requiredRights.filterNot(beforeRights::contains)
+                    .forEach { right->
+                        log.trace("creating link to $right")
+                        val sql = queryGenerationStrategy.insert(
+                                pd.linkTable,
+                                listOf(pd.leftColumn, pd.rightColumn)
+                        )
+                        log.trace("executing: $sql")
+                        jdbc.doInConnection{
+                            var ps = it.prepareStatement(sql)
+                            val values = listOf(
+                                    id,
+                                    pd.rightKeyProperty.get(right)
+                                            ?: error("could not extract right key")
+                            )
+                            ps = PreparedStatementValuesSetter(values)
+                                    .set(ps)
+                            ps.executeUpdate()
+                        }
+                    }
+            //удалим лишние
+            beforeRights.filterNot(requiredRights::contains)
+                    .forEach { right->
+                        log.trace("removing link to $right")
+                        val sql = queryGenerationStrategy.delete(
+                                pd.linkTable,
+                                listOf(
+                                        EqualsCondition(pd.leftColumn),
+                                        EqualsCondition(pd.rightColumn)
+                                )
+                        )
+                        jdbc.doInConnection{ conn ->
+                            var ps = conn.prepareStatement(sql)
+                            val values = listOf(
+                                    id,
+                                    pd.rightKeyProperty.get(right)
+                                            ?: error("could not extract right key")
+                            )
+                            ps = PreparedStatementValuesSetter(values)
+                                    .set(ps)
+                            ps.executeUpdate()
+                        }
+
+                    }
+
+        }
+
         return findById(id)
                 ?: error("row with id $id not found")
     }
@@ -144,6 +202,29 @@ class RepoMethodInterceptor(
             }
         }
 
+        entityDescriptor.manyToManyProperties.forEach {
+            //внесем изменения в связывающую таблицу
+            val pd = it.value
+            val requiredRights = pd.kProperty.get(obj) as List<Any>
+            //добавим недостающее
+            requiredRights.forEach {right->
+                val sql = queryGenerationStrategy.insert(
+                        pd.linkTable,
+                        listOf(pd.leftColumn, pd.rightColumn)
+                )
+                jdbc.doInConnection {conn->
+                    var ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)
+                    val values = listOf(
+                            id,
+                            pd.rightKeyProperty.get(right)
+                                    ?: error("could not extract right key")
+                    )
+                    ps = PreparedStatementValuesSetter(values)
+                            .set(ps)
+                    ps.executeUpdate()
+                }
+            }
+        }
         return findById(id)!!
     }
 

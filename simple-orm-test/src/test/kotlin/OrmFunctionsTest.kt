@@ -7,7 +7,6 @@ import paulpaulych.utils.ResourceLoader
 import simpleorm.core.*
 import simpleorm.core.delegate.JdbcDelegateCreator
 import simpleorm.core.jdbc.JdbcTemplate
-import simpleorm.core.jdbc.ResultSetExtractor
 import simpleorm.core.jdbc.SingleOperationConnectionHolder
 import simpleorm.core.proxy.CglibDelegateProxyGenerator
 import simpleorm.core.proxy.repository.CglibRepoProxyGenerator
@@ -15,7 +14,6 @@ import simpleorm.core.sql.SimpleQueryGenerator
 import simpleorm.core.schema.yaml.ast.YamlSchemaCreator
 import simpleorm.test.Example
 import simpleorm.test.Person
-import java.sql.ResultSet
 
 class OrmFunctionsTest : FunSpec(){
 

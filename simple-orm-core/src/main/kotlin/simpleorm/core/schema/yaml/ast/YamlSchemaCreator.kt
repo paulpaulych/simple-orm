@@ -6,10 +6,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import simpleorm.core.schema.EntityDescriptor
 import simpleorm.core.schema.OrmSchema
 import simpleorm.core.schema.SchemaCreator
-import simpleorm.core.schema.property.IdProperty
-import simpleorm.core.schema.property.OneToManyProperty
-import simpleorm.core.schema.property.PlainProperty
-import simpleorm.core.schema.property.PropertyDescriptor
+import simpleorm.core.schema.property.*
 import simpleorm.core.utils.property
 import kotlin.random.Random
 import kotlin.reflect.KClass
@@ -66,6 +63,17 @@ class YamlSchemaCreator(
                     kProperty as KProperty1<Any, Any>,
                     manyClass,
                     manyClass.property(raw.oneToMany.keyField)
+            )
+        }
+        if(raw.manyToMany != null){
+            val rightClass = Class.forName(raw.manyToMany.className).kotlin as KClass<Any>
+            return ManyToManyProperty(
+                    kProperty as KProperty1<Any, Any>,
+                    rightClass,
+                    raw.manyToMany.linkTable,
+                    raw.manyToMany.leftColumn,
+                    raw.manyToMany.rightColumn,
+                    rightClass.property(raw.manyToMany.rightKeyField)
             )
         }
         error("invalid schema")

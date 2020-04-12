@@ -1,9 +1,6 @@
 package simpleorm.core.schema
 
-import simpleorm.core.schema.property.IdProperty
-import simpleorm.core.schema.property.OneToManyProperty
-import simpleorm.core.schema.property.PlainProperty
-import simpleorm.core.schema.property.PropertyDescriptor
+import simpleorm.core.schema.property.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -24,6 +21,12 @@ data class EntityDescriptor<T: Any>(
             .filter { it.value is OneToManyProperty<*> }
             .mapValues { it.value as OneToManyProperty<Any> }
             .mapKeys { it.key as KProperty1<Any, *> }
+
+    val manyToManyProperties = properties
+            .filter { it.value is ManyToManyProperty<*> }
+            .mapValues { it.value as ManyToManyProperty<Any> }
+            .mapKeys { it.key as KProperty1<Any, *> }
+
 
     init{
         val rawIdProp = properties.values.find{ it is IdProperty}

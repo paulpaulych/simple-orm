@@ -6,10 +6,7 @@ import simpleorm.core.proxy.resulsetextractor.CglibRseProxyGenerator
 import simpleorm.core.sql.QueryGenerationStrategy
 import simpleorm.core.sql.condition.EqualsCondition
 import simpleorm.core.schema.EntityDescriptor
-import simpleorm.core.schema.property.IdProperty
-import simpleorm.core.schema.property.OneToManyProperty
-import simpleorm.core.schema.property.PlainProperty
-import simpleorm.core.schema.property.PropertyDescriptor
+import simpleorm.core.schema.property.*
 
 class JdbcDelegateCreator(
      private val jdbc: JdbcOperations,
@@ -42,6 +39,15 @@ class JdbcDelegateCreator(
                 pd,
                 initialValue
             ) as GenericDelegate<T>
+        }
+        if(pd is ManyToManyProperty<T>){
+            log.trace("creating ManyToManyPropertyDelegate for ${pd.kProperty}...")
+            return ManyToManyPropertyDelegate(
+                    pd,
+                    initialValue,
+                    jdbc,
+                    queryGenerationStrategy
+            )as GenericDelegate<T>
         }
         error("unknown property descriptor type ${pd::class}")
     }

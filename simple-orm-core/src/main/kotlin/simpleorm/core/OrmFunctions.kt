@@ -58,6 +58,7 @@ inline fun <reified T: Any, reified ID: Any> KClass<T>.delete(id: ID){
 }
 
 fun <T: Any, R: Any> KClass<T>.findBy(kClass: KClass<T>, kProperty1: KProperty1<T, R>, value: R): List<T>{
+    //TODO: оптимизировать
     return findRepo(kClass).findAll().filter { kProperty1.get(it) == value }
 }
 
