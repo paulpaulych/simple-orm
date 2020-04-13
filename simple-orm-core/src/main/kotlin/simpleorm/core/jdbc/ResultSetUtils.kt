@@ -1,6 +1,7 @@
 package simpleorm.core.jdbc
 
 import java.math.BigDecimal
+import java.sql.Date
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 
@@ -13,6 +14,7 @@ internal fun <T: Any> byColumnGetter(kClass: KClass<T>, resultSet: ResultSet): (
         Long::class -> { s: String -> resultSet.getLong(s) as T}
         Short::class -> { s: String -> resultSet.getShort(s) as T}
         Byte::class -> { s: String -> resultSet.getByte(s) as T}
+        Date::class -> { s: String -> resultSet.getTimestamp(s) as T}
         BigDecimal::class -> {s: String -> resultSet.getBigDecimal(s) as T}
         else -> throw IllegalArgumentException("cannot find extract method for type: $kClass")
     }
@@ -29,6 +31,7 @@ internal fun <T: Any> byIndexGetter(kClass: KClass<T>, resultSet: ResultSet): (I
         Short::class -> { s: Int -> resultSet.getShort(s) as T}
         Byte::class -> { s: Int -> resultSet.getByte(s) as T}
         BigDecimal::class -> {s: Int -> resultSet.getBigDecimal(s) as T}
+        Date::class -> { s: Int -> resultSet.getTimestamp(s) as T}
         else -> throw IllegalArgumentException("cannot find extract method for type: $kClass")
     }
 }

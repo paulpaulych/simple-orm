@@ -2,7 +2,7 @@ package simpleorm.core
 
 import simpleorm.core.jdbc.JdbcOperations
 import simpleorm.core.jdbc.ResultSetExtractor
-import simpleorm.core.proxy.repository.setValues
+import simpleorm.core.jdbc.setValues
 import kotlin.reflect.KClass
 
 class DefaultRepo<T: Any, ID: Any>(

@@ -101,10 +101,9 @@ class RepoMethodInterceptor(
 
         entityDescriptor.manyToOneProperties
                 .forEach{ (_, pd) ->
+                    val oneObj = pd.kProperty.get(obj) ?: return@forEach
                     columns.add(pd.foreignKeyColumn)
-                    val manyObj = pd.kProperty.get(obj)
-                            ?: error("cannot access many part of relation")
-                    values.add(pd.manyIdProperty.get(manyObj))
+                    values.add(pd.manyIdProperty.get(oneObj))
                 }
 
         val sql = queryGenerationStrategy.update(
@@ -186,21 +185,21 @@ class RepoMethodInterceptor(
     private fun insert(obj: Any): Any{
         log.debug("inserting $obj")
         val columns = mutableListOf<String>()
-        val values = mutableListOf<String>()
+        val values = mutableListOf<Any?>()
         entityDescriptor.plainProperties
                 .filterValues { it !is IdProperty<Any>}
-                .map { it.value.column to it.key.get(obj).toString() }
+                .map { it.value.column to it.key.get(obj) }
                 .forEach{
                     columns.add(it.first)
                     values.add(it.second)
                 }
 
+        //TODO:дублируется код
         entityDescriptor.manyToOneProperties
                 .forEach{ (_, pd) ->
+                    val manyObj = pd.kProperty.get(obj) ?: return@forEach
                     columns.add(pd.foreignKeyColumn)
-                    val manyObj = pd.kProperty.get(obj)
-                            ?: error("cannot access many part of relation")
-                    values.add(pd.manyIdProperty.get(manyObj).toString())
+                    values.add(pd.manyIdProperty.get(manyObj))
                 }
 
         val sql = queryGenerationStrategy.insert(entityDescriptor.table, columns)
@@ -239,7 +238,7 @@ class RepoMethodInterceptor(
                             pd.rightKeyProperty.get(right)
                                     ?: error("could not extract right key")
                     )
-                    var ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)
+                    conn.prepareStatement(sql)
                             .setValues(values)
                             .executeUpdate()
                 }

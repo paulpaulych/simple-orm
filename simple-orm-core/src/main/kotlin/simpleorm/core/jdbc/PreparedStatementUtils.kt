@@ -1,4 +1,4 @@
-package simpleorm.core.proxy.repository
+package simpleorm.core.jdbc
 
 import org.slf4j.LoggerFactory
 import java.io.InputStream
@@ -37,6 +37,7 @@ fun PreparedStatement.setValues(values: List<Any?>): PreparedStatement{
             Boolean::class -> this.setBoolean(shiftedInd, v as Boolean)
             Byte::class -> this.setByte(shiftedInd, v as Byte)
             Date::class -> this.setDate(shiftedInd, v as Date)
+            java.util.Date::class -> this.setTimestamp(shiftedInd, Timestamp.from((v as java.util.Date).toInstant()))
             //TODO: Дописать остальное
             else -> this.setObject(i, v)
 
