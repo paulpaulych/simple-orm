@@ -59,17 +59,18 @@ class RepoMethodInterceptor(
         if(requiredId::class != idClass){
             throw IllegalArgumentException("required id type for ${entityDescriptor.kClass} is $idClass")
         }
-        val id = jdbc.queryForObject(
-                queryGenerationStrategy.select(
-                        entityDescriptor.table,
-                        listOf(entityDescriptor.idProperty.column),
-                        listOf(EqualsCondition(entityDescriptor.idProperty.column, requiredId))
-                ),
-                rse::extract
-        )
-        id?:let {
-            return null
+        val ids = jdbc.doInConnection { conn->
+            val sql = queryGenerationStrategy.select(
+                    entityDescriptor.table,
+                    listOf(entityDescriptor.idProperty.column),
+                    listOf(EqualsCondition(entityDescriptor.idProperty.column))
+            )
+            val rs = conn.prepareStatement(sql)
+                    .setValues(listOf(requiredId))
+                    .executeQuery()
+            rse.extract(rs)
         }
+        if(ids.isEmpty()) return null
         return proxyGenerator.createProxyClass(entityDescriptor.kClass, requiredId)
     }
 
@@ -103,7 +104,7 @@ class RepoMethodInterceptor(
                     columns.add(pd.foreignKeyColumn)
                     val manyObj = pd.kProperty.get(obj)
                             ?: error("cannot access many part of relation")
-                    values.add(pd.manyIdProperty.get(manyObj).toString())
+                    values.add(pd.manyIdProperty.get(manyObj))
                 }
 
         val sql = queryGenerationStrategy.update(
@@ -258,16 +259,16 @@ class RepoMethodInterceptor(
 
     private fun delete(id: Any) {
         log.debug("deleting ${entityDescriptor.kClass} by id = $id")
-        jdbc.update(
-                queryGenerationStrategy.delete(
-                    entityDescriptor.table,
-                    listOf(
-                        EqualsCondition(
-                            entityDescriptor.idProperty.column,
-                            id
-                        )
-                    )
-        ))
+        jdbc.doInConnection { connection ->
+            connection.prepareStatement(
+                    queryGenerationStrategy.delete(
+                            entityDescriptor.table,
+                            listOf(
+                                    EqualsCondition(entityDescriptor.idProperty.column)
+                            )))
+                    .setValues(listOf(id))
+                    .executeUpdate()
+        }
     }
 
     private fun query(sql: String, params: List<Any> = listOf()): List<Any>{
