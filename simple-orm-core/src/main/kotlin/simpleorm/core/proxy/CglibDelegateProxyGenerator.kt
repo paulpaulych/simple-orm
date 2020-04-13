@@ -26,7 +26,7 @@ class CglibDelegateProxyGenerator(
     override fun <T : Any> createProxyClass(kClass: KClass<T>, id: Any): T {
         val enhancer = Enhancer()
         val entityDescriptor = ormSchema.findEntityDescriptor(kClass)
-        log.info("creating proxy for $kClass")
+        log.trace("creating proxy for $kClass")
         val interceptor = DelegatedPropertiesInterceptor(
                 kClass,
                 kClass.mutableProperties().map {
@@ -72,7 +72,7 @@ class CglibDelegateProxyGenerator(
             constructorArgTypes,
             args
         )
-        log.info("proxy for $kClass created")
+        log.trace("proxy for $kClass created")
         return kClass.cast(proxy)
     }
 

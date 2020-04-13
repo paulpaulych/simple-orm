@@ -54,7 +54,7 @@ class RepoMethodInterceptor(
     }
 
     private fun findById(requiredId: Any): Any? {
-
+        log.debug("fetching ${entityDescriptor.kClass} by id = $requiredId")
         val idClass = entityDescriptor.idProperty.kProperty.returnType.classifier
         if(requiredId::class != idClass){
             throw IllegalArgumentException("required id type for ${entityDescriptor.kClass} is $idClass")
@@ -74,6 +74,7 @@ class RepoMethodInterceptor(
     }
 
     private fun findAll(): List<Any> {
+        log.debug("fetching all ${entityDescriptor.kClass}")
         val ids = jdbc.queryForList(
                 queryGenerationStrategy.select(
                         entityDescriptor.table,
@@ -85,6 +86,7 @@ class RepoMethodInterceptor(
     }
 
     private fun update(id: Any, obj: Any): Any{
+        log.debug("updating existing $obj")
         val columns = mutableListOf<String>()
         val values = mutableListOf<String>()
         entityDescriptor.plainProperties
@@ -183,7 +185,7 @@ class RepoMethodInterceptor(
     }
 
     private fun insert(obj: Any): Any{
-
+        log.debug("inserting $obj")
         val columns = mutableListOf<String>()
         val values = mutableListOf<String>()
         entityDescriptor.plainProperties
@@ -259,6 +261,7 @@ class RepoMethodInterceptor(
     }
 
     private fun delete(id: Any) {
+        log.debug("deleting ${entityDescriptor.kClass} by id = $id")
         jdbc.update(
                 queryGenerationStrategy.delete(
                     entityDescriptor.table,
