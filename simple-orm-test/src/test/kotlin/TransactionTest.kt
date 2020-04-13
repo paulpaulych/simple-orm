@@ -45,23 +45,7 @@ class TransactionTest : FunSpec(){
         )
 
         jdbc.execute("drop table person if exists")
-        jdbc.execute("create table person(id bigint, name text, age integer)")
-
-        jdbc.execute("drop sequence simpleorm if exists")
-        jdbc.execute("create sequence simpleorm start with 3")
-
-        test("sequence"){
-            val next = jdbc.queryForObject("select next value for simpleorm") {
-                val list = mutableListOf<Long>()
-                while(it.next()){
-                    list.add(it.getLong(1))
-                }
-                list
-            }
-
-
-            next shouldBe 3
-        }
+        jdbc.execute("create table person(id bigint primary key auto_increment, name text, age integer)")
 
         val repoProxyGenerator = CglibRepoProxyGenerator(
                 ormSchema,
@@ -83,51 +67,28 @@ class TransactionTest : FunSpec(){
                 jdbc
         )
 
-//        test("without transaction"){
-//
-//            val changeJob = GlobalScope.launch {
-//
-//                val saved = save(Person(null, "Person", 18))
-//
-//                delay(3000L)
-//
-//                val changed = saved.copy(age = 19)
-//                save(changed)
-//
-//            }
-//            delay(3000L)
-//            val firstRead = Person::class.findById(4L)
-//
-//            firstRead shouldBe Person(4, "Person", 18)
-//
-//            changeJob.join()
-//
-//            val secondRead = Person::class.findById(4L)
-//            secondRead shouldBe Person(4, "Person", 19)
-//        }
-
         test("tx commit"){
 
             inTransaction {
                 save(Person(null, "Person", 21))
             }
 
-            Person::class.findById(4L) shouldBe Person(4, "Person", 21)
+            Person::class.findById(1L) shouldBe Person(1, "Person", 21)
         }
 
         test("tx rollback"){
             try {
                 inTransaction {
-                    val firstRead = Person::class.findById(4L)
+                    val firstRead = Person::class.findById(1L)
 
-                    firstRead shouldBe Person(4, "Person", 21)
+                    firstRead shouldBe Person(1, "Person", 21)
 
                     save(firstRead!!.copy(age = 23))
                     throw RuntimeException("errorerrorerrorerror")
                 }
             }catch (e: Throwable){
                 e.message shouldBe "errorerrorerrorerror"
-                Person::class.findById(4L) shouldBe Person(4, "Person", 21)
+                Person::class.findById(1L) shouldBe Person(1, "Person", 21)
             }
         }
 
@@ -141,7 +102,7 @@ class TransactionTest : FunSpec(){
                             println("waiting")
                             lock.wait()
                         }
-                        read = Person::class.findById(5L)
+                        read = Person::class.findById(2L)
 
                     }
                 }
@@ -150,7 +111,7 @@ class TransactionTest : FunSpec(){
             delay(600)
             inTransaction {
                 val saved = save(Person(null, "Person5", 21))
-                saved shouldBe Person(5, "Person5", 21)
+                saved shouldBe Person(2, "Person5", 21)
 
                 synchronized(lock){
                     println("notifying")
@@ -160,7 +121,7 @@ class TransactionTest : FunSpec(){
 
             //Todo: нормально синхронизовать потоки
             delay(3000L)
-            read shouldBe Person(5, "Person5", 21)
+            read shouldBe Person(2, "Person5", 21)
 
         }
 
@@ -176,7 +137,7 @@ class TransactionTest : FunSpec(){
                             lock.wait()
                         }
                         println("reading")
-                        read = Person::class.findById(6L)
+                        read = Person::class.findById(3L)
                         lock.notifyAll()
                     }
                 }
@@ -185,7 +146,7 @@ class TransactionTest : FunSpec(){
             inTransaction {
                 println("creating")
                 val saved = save(Person(null, "Person6", 21))
-                saved shouldBe Person(6, "Person6", 21)
+                saved shouldBe Person(3, "Person6", 21)
 
                 synchronized(lock){
                     println("notifying")
@@ -194,7 +155,7 @@ class TransactionTest : FunSpec(){
                 }
 
                 println("changing")
-                save(Person(6, "Person6", 23))
+                save(Person(3, "Person6", 23))
             }
 
             //Todo: нормально синхронизовать потоки

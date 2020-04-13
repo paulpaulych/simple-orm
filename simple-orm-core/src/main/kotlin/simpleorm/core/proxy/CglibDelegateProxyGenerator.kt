@@ -62,10 +62,7 @@ class CglibDelegateProxyGenerator(
             val manyToOne = entityDescriptor.manyToOneProperties.values.find { it.kProperty.name == pName }
             when {
                 ind == indexOfId -> id
-                //TODO: придумать что-то получше для дефофлтного значения
-                manyToOne != null -> {
-                    mockkClass(manyToOne.kClass)
-                }
+                manyToOne != null -> mockkClass(manyToOne.kClass)
                 else -> defaultValue(constructorArgTypes[ind].kotlin,
                         primaryConstructor.parameters[ind]!!.type.isMarkedNullable)
             }

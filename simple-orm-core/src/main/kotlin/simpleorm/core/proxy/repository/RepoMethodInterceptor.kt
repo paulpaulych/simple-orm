@@ -5,6 +5,7 @@ import net.sf.cglib.proxy.MethodProxy
 import paulpaulych.utils.LoggerDelegate
 import simpleorm.core.ISimpleOrmRepo
 import simpleorm.core.jdbc.*
+import simpleorm.core.jdbc.get
 import simpleorm.core.proxy.ProxyGenerator
 import simpleorm.core.proxy.resulsetextractor.CglibRseProxyGenerator
 import simpleorm.core.schema.EntityDescriptor
@@ -14,6 +15,7 @@ import simpleorm.core.sql.condition.EqualsCondition
 import simpleorm.core.utils.method
 import java.lang.reflect.Method
 import java.sql.PreparedStatement
+import kotlin.reflect.KClass
 import kotlin.reflect.jvm.javaMethod
 import simpleorm.core.save as saveGlobal
 
@@ -202,6 +204,7 @@ class RepoMethodInterceptor(
 
         val sql = queryGenerationStrategy.insert(entityDescriptor.table, columns)
 
+        val idKClass = entityDescriptor.idProperty.kProperty.returnType.classifier as KClass<*>
         val id = jdbc.doInConnection{
             var ps = it.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)
             ps = PreparedStatementValuesSetter(values)
@@ -209,7 +212,8 @@ class RepoMethodInterceptor(
             ps.executeUpdate()
             val keys = ps.generatedKeys
             keys.next()
-            keys.getLong(1)
+            keys.get(1, idKClass)
+                    ?: error("generated key is null")
         }
 
         entityDescriptor.oneToManyProperties.values.forEach{pd->

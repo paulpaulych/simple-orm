@@ -43,21 +43,6 @@ class OrmFunctionsTest : FunSpec(){
         jdbc.execute("drop table person if exists")
         jdbc.execute("create table person(id bigint auto_increment, name text, age integer)")
 
-        jdbc.execute("create sequence simpleorm start with 3")
-
-        test("sequence"){
-            val next = jdbc.queryForObject("select next value for simpleorm"){
-                val list = mutableListOf<Long>()
-                while(it.next()){
-                    list.add(it.getLong(1))
-                }
-                list
-            }
-
-
-            next shouldBe 3
-        }
-
 
         val repoProxyGenerator = CglibRepoProxyGenerator(
                 ormSchema,

@@ -1,7 +1,7 @@
 package simpleorm.core
 
 import simpleorm.core.jdbc.ResultSetExtractor
-import simpleorm.core.mapper.PrimitivesOnlyResultExtractHelper
+import simpleorm.core.jdbc.get
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
@@ -21,7 +21,7 @@ class DefaultResultSetExtractor<T: Any>(
         while (resultSet.next()){
             val args = mutableMapOf<KParameter, T>()
             constructorParameters.forEach{
-                args[it] = (PrimitivesOnlyResultExtractHelper().getter(it.type.classifier as KClass<*>, resultSet).invoke(it.name!!) as T)
+                args[it] = resultSet.get(it.name!!, it.type.classifier as KClass<*>) as T
             }
             res += primaryConstructor.callBy(args)
         }

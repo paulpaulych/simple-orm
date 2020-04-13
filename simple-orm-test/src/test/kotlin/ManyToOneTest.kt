@@ -111,11 +111,28 @@ class ManyToOneTest : FunSpec(){
         jdbc.execute("insert into man values(2, 'MAN_2')")
 
         jdbc.execute("insert into woman values(1, 'WOMAN_1', 2)")
+        jdbc.execute("insert into woman values(2, 'WOMAN_2', null)")
 
         test("nullable manytoone findById"){
             val woman = Woman::class.findById(1L)
                     ?: error("not found")
             woman shouldBe Woman(1, "WOMAN_1", Man(2, "MAN_2"))
+        }
+
+        test("null link"){
+//            val id = jdbc.queryForObject("select\n" +
+//                    "    husband_id\n" +
+//                    "from woman\n" +
+//                    "where id = '2'"){
+//                it.next()
+//                listOf<Lon(it.getObject(1))
+//            }
+//            id shouldBe null
+//
+            val woman = Woman::class.findById(2L)
+                    ?: error("not found")
+            println(woman)
+            woman shouldBe Woman(2, "WOMAN_2", null)
         }
 
 //        test("add one right"){

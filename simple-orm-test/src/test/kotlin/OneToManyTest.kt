@@ -34,10 +34,10 @@ class OneToManyTest: FunSpec() {
         )
 
         jdbc.execute("drop table product if exists")
-        jdbc.execute("create table product(id bigint primary key, name text, owner_id bigint)")
+        jdbc.execute("create table product(id bigint primary key auto_increment, name text, owner_id bigint)")
 
         jdbc.execute("drop table owner if exists")
-        jdbc.execute("create table owner(id bigint primary key, name text)")
+        jdbc.execute("create table owner(id bigint primary key auto_increment, name text)")
 
         jdbc.execute("insert into owner values(1, 'OWNER_1')")
         jdbc.execute("insert into owner values(2, 'OWNER_2')")
@@ -114,9 +114,9 @@ class OneToManyTest: FunSpec() {
             val owner = Owner(null,"OWNER_3", listOf())
             save(owner) shouldBe Owner(3, "OWNER_3", listOf())
 
-            val product = Product(null, "PRODUCT_3", 4)
+            val product = Product(null, "PRODUCT_3", 3)
 
-            save(product) shouldBe Product(3, "PRODUCT_3", 4)
+            save(product) shouldBe Product(3, "PRODUCT_3", 3)
 
             Owner::class.findById(3L) shouldBe Owner(3, "OWNER_3", listOf(
                     Product(3, "PRODUCT_3", 3)

@@ -2,7 +2,7 @@ package simpleorm.core.proxy.resulsetextractor
 
 import net.sf.cglib.proxy.*
 import simpleorm.core.jdbc.ResultSetExtractor
-import simpleorm.core.mapper.PrimitivesOnlyResultExtractHelper
+import simpleorm.core.jdbc.get
 import simpleorm.core.schema.property.PlainProperty
 import java.lang.reflect.Method
 import java.sql.ResultSet
@@ -22,13 +22,11 @@ class CglibRseProxyGenerator<T: Any>(
                 if(method.name == "mappedClass"){
                     return kClass
                 }
-                val resultSet = args.first() as ResultSet
-                val getter = PrimitivesOnlyResultExtractHelper().getter(
-                        kClass,
-                        resultSet)
-                val resultList = mutableListOf<T>()
+                val resultSet = args.firstOrNull()?.let { it as ResultSet }
+                        ?: error("resultSet is null")
+                val resultList = mutableListOf<T?>()
                 while(resultSet.next()){
-                    resultList.add(getter.invoke(propertyDescriptor.column))
+                    resultList.add(resultSet.get(propertyDescriptor.column, kClass))
                 }
                 return resultList
             }

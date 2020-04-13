@@ -72,5 +72,7 @@ class JdbcDelegateCreator(
 }
 
 class OneToManyPlainAdapter(
-        val manyToOneProperty: ManyToOneProperty<Any>
-): PlainProperty<Any>(manyToOneProperty.manyIdProperty as KProperty1<Any, Any>, manyToOneProperty.foreignKeyColumn)
+        manyToOneProperty: ManyToOneProperty<Any>
+) : PlainProperty<Any>(
+        manyToOneProperty.manyIdProperty as KProperty1<Any, Any>,
+        manyToOneProperty.foreignKeyColumn)

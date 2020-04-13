@@ -26,13 +26,11 @@ class ProxyTest : FunSpec(){
             ) as Foo
 
             proxyInstance shouldBe Foo(1L, "FooName")
-            proxyInstance.hello("h") shouldBe "h"
+            proxyInstance.hello("h") shouldBe "Hello, h!"
         }
     }
 
 }
-
-
 
 private class TestEntityProxy(
         private val kClass: KClass<*>
