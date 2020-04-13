@@ -23,13 +23,13 @@ class ManyToOnePropertyDelegate<T: Any>(
 
     private val log by LoggerDelegate()
 
-    override fun getValue(thisRef: Any, property: KProperty<*>): T {
+    override fun getValue(thisRef: Any, property: KProperty<*>): T? {
         val sql = queryGenerationStrategy.select(
                 table,
                 listOf(pd.foreignKeyColumn),
                 listOf(EqualsCondition(idColumnName, id.toString())))
         val foreignKeyValue = jdbc.queryForObject(sql,rse::extract)
-                ?: error("foreign key val is null")
+                ?: return null
         val res = pd.kClass.findBy(pd.kClass, pd.manyIdProperty as KProperty1<T, Any>, foreignKeyValue)
         if(res.size > 1){
             error("expected result size: 1, got: ${res.size}")

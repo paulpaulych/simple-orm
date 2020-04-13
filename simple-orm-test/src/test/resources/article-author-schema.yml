@@ -22,3 +22,24 @@ entities:
           className: Author
           foreignKeyColumn: author_id
 
+  Man:
+    table: man
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name
+
+  Woman:
+    table: woman
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name
+      husband:
+        manyToOne:
+          className: Man
+          foreignKeyColumn: husband_id

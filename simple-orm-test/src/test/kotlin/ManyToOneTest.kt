@@ -26,6 +26,19 @@ data class Author(
         val name: String
 )
 
+@Open
+data class Woman(
+        val id: Long? = null,
+        val name: String,
+        val husband: Man?
+)
+
+@Open
+data class Man(
+        val id: Long? = null,
+        val name: String
+)
+
 class ManyToOneTest : FunSpec(){
 
     init {
@@ -71,7 +84,9 @@ class ManyToOneTest : FunSpec(){
         RepoRegistryProvider.repoRegistry = RepoRegistry(
                 mapOf(
                         Article::class to repoProxyGenerator.createRepoProxy(Article::class),
-                        Author::class to repoProxyGenerator.createRepoProxy(Author::class)
+                        Author::class to repoProxyGenerator.createRepoProxy(Author::class),
+                        Woman::class to repoProxyGenerator.createRepoProxy(Woman::class),
+                        Man::class to repoProxyGenerator.createRepoProxy(Man::class)
                 ),
                 jdbc
         )
@@ -81,6 +96,26 @@ class ManyToOneTest : FunSpec(){
                     ?: error("not found")
 
             article1 shouldBe Article(1, "ART_1", Author(2, "AUTHOR_2"))
+        }
+
+
+
+
+        jdbc.execute("drop table woman if exists")
+        jdbc.execute("create table woman(id bigint primary key auto_increment, name text, husband_id bigint)")
+
+        jdbc.execute("drop table man if exists")
+        jdbc.execute("create table man(id bigint primary key auto_increment, name text)")
+
+        jdbc.execute("insert into man values(1, 'MAN_1')")
+        jdbc.execute("insert into man values(2, 'MAN_2')")
+
+        jdbc.execute("insert into woman values(1, 'WOMAN_1', 2)")
+
+        test("nullable manytoone findById"){
+            val woman = Woman::class.findById(1L)
+                    ?: error("not found")
+            woman shouldBe Woman(1, "WOMAN_1", Man(2, "MAN_2"))
         }
 
 //        test("add one right"){

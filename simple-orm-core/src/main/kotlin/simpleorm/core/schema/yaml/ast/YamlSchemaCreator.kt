@@ -82,7 +82,7 @@ class YamlSchemaCreator(
         if(raw.manyToOne != null){
             val kClass = Class.forName(raw.manyToOne.className).kotlin as KClass<Any>
             val manyIdProperty = eds.find { it.kClass == kClass }?.idProperty
-                    ?: error("")
+                    ?: error("please describe $kClass higher in schema file")
             return ManyToOneProperty(
                     kProperty as KProperty1<Any, Any>,
                     kClass,
