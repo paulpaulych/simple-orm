@@ -81,8 +81,8 @@ class CglibDelegateProxyGenerator(
         when(kClass){
             Short::class -> return Short.MIN_VALUE as T
             Byte::class -> return Byte.MIN_VALUE as T
-            Int::class -> return Short.MIN_VALUE as T
-            Long::class -> return Short.MIN_VALUE as T
+            Int::class -> return Int.MIN_VALUE as T
+            Long::class -> return Long.MIN_VALUE as T
             Boolean::class -> return false as T
             BigDecimal::class -> return BigDecimal.ZERO as T
             String::class -> return "DEFAULTVALUE. IF YOU SEE THIS PLEASE REPORT TO MAINTAINERS" as T

@@ -88,11 +88,11 @@ class RepoMethodInterceptor(
     private fun update(id: Any, obj: Any): Any{
         log.debug("updating existing $obj")
         val columns = mutableListOf<String>()
-        val values = mutableListOf<String>()
+        val values = mutableListOf<Any?>()
         entityDescriptor.plainProperties
                 .filterNot { it.value is IdProperty }
                 .map {
-                    it.value.column to it.key.get(obj).toString()
+                    it.value.column to it.key.get(obj)
                 }.forEach{
                     columns.add(it.first)
                     values.add(it.second)
@@ -109,14 +109,14 @@ class RepoMethodInterceptor(
         val sql = queryGenerationStrategy.update(
                         entityDescriptor.table,
                         columns,
-                        listOf(EqualsCondition(entityDescriptor.idProperty.column, id.toString()))
+                        listOf(EqualsCondition(entityDescriptor.idProperty.column))
         )
+        values.add(id)
 
         jdbc.doInConnection{
-            var ps = PreparedUpdatePSCreator(sql).create(it)
-            ps = PreparedStatementValuesSetter(values)
-                    .set(ps)
-            ps.executeUpdate()
+            PreparedUpdatePSCreator(sql).create(it)
+                    .setValues(values)
+                    .executeUpdate()
         }
 
         entityDescriptor.oneToManyProperties.forEach{
@@ -141,16 +141,15 @@ class RepoMethodInterceptor(
                                 listOf(pd.leftColumn, pd.rightColumn)
                         )
                         log.trace("executing: $sql")
-                        jdbc.doInConnection{
-                            var ps = it.prepareStatement(sql)
+                        jdbc.doInConnection{ conn ->
                             val values = listOf(
                                     id,
                                     pd.rightKeyProperty.get(right)
                                             ?: error("could not extract right key")
                             )
-                            ps = PreparedStatementValuesSetter(values)
-                                    .set(ps)
-                            ps.executeUpdate()
+                            var ps = conn.prepareStatement(sql)
+                                    .setValues(values)
+                                    .executeUpdate()
                         }
                     }
             //удалим лишние
@@ -165,15 +164,14 @@ class RepoMethodInterceptor(
                                 )
                         )
                         jdbc.doInConnection{ conn ->
-                            var ps = conn.prepareStatement(sql)
                             val values = listOf(
                                     id,
                                     pd.rightKeyProperty.get(right)
                                             ?: error("could not extract right key")
                             )
-                            ps = PreparedStatementValuesSetter(values)
-                                    .set(ps)
-                            ps.executeUpdate()
+                            var ps = conn.prepareStatement(sql)
+                                    .setValues(values)
+                                    .executeUpdate()
                         }
 
                     }
@@ -208,9 +206,8 @@ class RepoMethodInterceptor(
 
         val idKClass = entityDescriptor.idProperty.kProperty.returnType.classifier as KClass<*>
         val id = jdbc.doInConnection{
-            var ps = it.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)
-            ps = PreparedStatementValuesSetter(values)
-                    .set(ps)
+            val ps = it.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)
+                    .setValues(values)
             ps.executeUpdate()
             val keys = ps.generatedKeys
             keys.next()
@@ -236,15 +233,14 @@ class RepoMethodInterceptor(
                         listOf(pd.leftColumn, pd.rightColumn)
                 )
                 jdbc.doInConnection {conn->
-                    var ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)
                     val values = listOf(
                             id,
                             pd.rightKeyProperty.get(right)
                                     ?: error("could not extract right key")
                     )
-                    ps = PreparedStatementValuesSetter(values)
-                            .set(ps)
-                    ps.executeUpdate()
+                    var ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)
+                            .setValues(values)
+                            .executeUpdate()
                 }
             }
         }
@@ -278,8 +274,7 @@ class RepoMethodInterceptor(
         return jdbc.doInConnection {
             val ps = it.prepareStatement(sql)
             val ids = rse.extract(
-                    PreparedStatementValuesSetter(params.toList())
-                            .set(ps)
+                    ps.setValues(params.toList())
                             .executeQuery()
             )
             ids.map{ id -> proxyGenerator.createProxyClass(entityDescriptor.kClass, id)}
