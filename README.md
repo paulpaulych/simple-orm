@@ -68,6 +68,8 @@ inline fun <reified T: Any> KClass<T>.delete(id: Any)
 
 inline fun <reified T: Any> save(obj: T)
 
+inline fun <reified T: Any> KClass<T>.findBy(spec: Map<KProperty1<T, Any>, Any>): List<T>
+
 ```
 
 which work in accordance with your orm schema.
