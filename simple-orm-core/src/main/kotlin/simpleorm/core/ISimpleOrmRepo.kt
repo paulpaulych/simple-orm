@@ -1,5 +1,7 @@
 package simpleorm.core
 
+import kotlin.reflect.KProperty1
+
 interface ISimpleOrmRepo<T: Any, ID: Any>{
 
     fun findById(id: ID): T?
@@ -12,4 +14,5 @@ interface ISimpleOrmRepo<T: Any, ID: Any>{
 
     fun query(sql: String, args: List<Any>): List<T>
 
+    fun findBy(spec: Map<KProperty1<T, Any>, Any>): List<T>
 }

@@ -57,10 +57,23 @@ inline fun <reified T: Any, reified ID: Any> KClass<T>.delete(id: ID){
     return findRepo(T::class).delete(id)
 }
 
-fun <T: Any, R: Any> KClass<T>.findBy(kClass: KClass<T>, kProperty1: KProperty1<T, R>, value: R): List<T>{
-    //TODO: оптимизировать
-    return findRepo(kClass).findAll().filter { kProperty1.get(it) == value }
+internal fun <T: Any, R: Any> KClass<T>.findBy(kClass: KClass<T>, kProperty1: KProperty1<T, R>, value: R): List<T>{
+    return findRepo(kClass).findBy(mapOf<KProperty1<T, Any>, Any>(kProperty1 to value))
 }
+
+internal fun <T: Any, R: Any> KClass<T>.findBy(kClass: KClass<T>, spec: Map<KProperty1<T, Any>, Any>): List<T>{
+    return findRepo(kClass).findBy(spec)
+}
+
+
+inline fun <reified T: Any, reified R: Any> KClass<T>.findBy(kProperty1: KProperty1<T, R>, value: R): List<T>{
+    return findRepo(T::class).findBy(mapOf<KProperty1<T, Any>, Any>(kProperty1 to value))
+}
+
+inline fun <reified T: Any> KClass<T>.findBy(spec: Map<KProperty1<T, Any>, Any>): List<T>{
+    return findRepo(T::class).findBy(spec)
+}
+
 
 fun <T: Any> findRepo(kClass: KClass<T>): ISimpleOrmRepo<T, Any> {
     val repoRegistry = RepoRegistryProvider.repoRegistry

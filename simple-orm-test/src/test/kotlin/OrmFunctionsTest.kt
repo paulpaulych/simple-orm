@@ -14,6 +14,7 @@ import simpleorm.core.sql.SimpleQueryGenerator
 import simpleorm.core.schema.yaml.ast.YamlSchemaCreator
 import simpleorm.test.Example
 import simpleorm.test.Person
+import kotlin.reflect.KProperty1
 
 class OrmFunctionsTest : FunSpec(){
 
@@ -140,6 +141,28 @@ class OrmFunctionsTest : FunSpec(){
 
             val res = NotDescribed::class.query("select id, name from NotDescribed")
             res[0] shouldBe NotDescribed(1, "first")
+        }
+
+        test("findBy test"){
+            val examples = Example::class.findBy(Example::stringValue, "goodbye")
+
+            examples.first() shouldBe Example(3, "goodbye")
+        }
+
+        test("findBy many filters"){
+            val persons1 = Person::class.findBy(mapOf<KProperty1<Person, Any>, Any>(
+                    Person::age to (29 as Any),
+                    Person::name to ("Bob2" as Any)
+            ))
+
+            persons1 shouldBe listOf()
+
+            val persons2 = Person::class.findBy(mapOf<KProperty1<Person, Any>, Any>(
+                Person::age to 31,
+                Person::name to "Bob2"
+            ))
+
+            persons2.first() shouldBe Person(3, "Bob2", 31)
         }
 
     }

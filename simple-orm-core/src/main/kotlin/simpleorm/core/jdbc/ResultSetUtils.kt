@@ -1,5 +1,6 @@
 package simpleorm.core.jdbc
 
+import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.ResultSet
@@ -37,6 +38,8 @@ internal fun <T: Any> byIndexGetter(kClass: KClass<T>, resultSet: ResultSet): (I
 }
 
 internal fun <T: Any> ResultSet.get(column: String, kClass: KClass<T>): T?{
+    val log = LoggerFactory.getLogger(this::class.java)
+    log.trace("extracting $column of type $kClass")
     if(kClass.java.isPrimitive){
         return byColumnGetter(kClass, this).invoke(column)
     }
@@ -44,6 +47,8 @@ internal fun <T: Any> ResultSet.get(column: String, kClass: KClass<T>): T?{
 }
 
 internal fun <T: Any> ResultSet.get(columnIndex: Int, kClass: KClass<T>): T?{
+    val log = LoggerFactory.getLogger(this::class.java)
+    log.trace("extracting $columnIndex of type $kClass")
     if(kClass.java.isPrimitive){
         return byIndexGetter(kClass, this).invoke(columnIndex)
     }

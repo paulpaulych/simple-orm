@@ -8,6 +8,7 @@ import simpleorm.core.schema.OrmSchema
 import simpleorm.core.utils.immutableProperties
 import simpleorm.core.utils.mutableProperties
 import java.math.BigDecimal
+import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.cast
 import kotlin.reflect.full.primaryConstructor
@@ -87,6 +88,7 @@ class CglibDelegateProxyGenerator(
             BigDecimal::class -> return BigDecimal.ZERO as T
             String::class -> return "DEFAULTVALUE. IF YOU SEE THIS PLEASE REPORT TO MAINTAINERS" as T
             List::class -> return listOf<Any>() as T
+            Date::class -> return Date() as T
             else -> error("$kClass cannot be field of entity")
         }
     }

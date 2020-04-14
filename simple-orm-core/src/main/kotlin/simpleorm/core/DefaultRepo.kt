@@ -4,6 +4,7 @@ import simpleorm.core.jdbc.JdbcOperations
 import simpleorm.core.jdbc.ResultSetExtractor
 import simpleorm.core.jdbc.setValues
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 
 class DefaultRepo<T: Any, ID: Any>(
         private val jdbc: JdbcOperations,
@@ -33,6 +34,10 @@ class DefaultRepo<T: Any, ID: Any>(
             val rs = ps.setValues(args).executeQuery()
             rse.extract(rs)
         }
+    }
+
+    override fun findBy(spec: Map<KProperty1<T, Any>, Any>): List<T> {
+        error("operation is unsupported for $kClass. Use custom query instead")
     }
 
 }

@@ -16,6 +16,7 @@ import simpleorm.core.utils.method
 import java.lang.reflect.Method
 import java.sql.PreparedStatement
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 import kotlin.reflect.jvm.javaMethod
 import simpleorm.core.save as saveGlobal
 
@@ -50,7 +51,32 @@ class RepoMethodInterceptor(
         if(method == ISimpleOrmRepo::class.method("query").javaMethod){
             return query(args[0] as String, args[1] as List<Any>)
         }
+        if(method == ISimpleOrmRepo::class.method("findBy").javaMethod){
+            return findBy(args.first() as Map<KProperty1<Any, Any>, Any>)
+        }
         error("unsupported operation: ${method.name}")
+    }
+
+    private fun findBy(spec: Map<KProperty1<Any, Any>, Any>): List<Any> {
+        log.debug("fetching ${entityDescriptor.kClass} by " +
+                "[${spec.mapKeys { it.key.name }.map{it.toString()}.joinToString(" and ")}]")
+        val spec = spec.toList()
+        val columns = spec.map{
+            entityDescriptor.plainProperties[it.first] ?.column
+                    ?: error("only plainProperties allowed for findBy operation")
+        }
+        val sql = queryGenerationStrategy.select(
+                entityDescriptor.table,
+                listOf(entityDescriptor.idProperty.column),
+                columns.map { EqualsCondition(it) }
+        )
+        val ids = jdbc.doInConnection {connection ->
+            val rs = connection.prepareStatement(sql)
+                    .setValues(spec.map{it.second})
+                    .executeQuery()
+            rse.extract(rs)
+        }
+        return ids.map{ proxyGenerator.createProxyClass(entityDescriptor.kClass, it) }
     }
 
     private fun findById(requiredId: Any): Any? {

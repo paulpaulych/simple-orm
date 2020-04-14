@@ -3,9 +3,11 @@ package simpleorm.core.delegate
 import paulpaulych.utils.LoggerDelegate
 import simpleorm.core.findBy
 import simpleorm.core.jdbc.JdbcOperations
+import simpleorm.core.jdbc.get
 import simpleorm.core.schema.property.ManyToManyProperty
 import simpleorm.core.sql.QueryGenerationStrategy
 import simpleorm.core.sql.condition.EqualsCondition
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
@@ -24,10 +26,11 @@ class ManyToManyPropertyDelegate<T: Any>(
                 listOf(pd.rightColumn),
                 listOf(EqualsCondition(pd.leftColumn, id))
         )
-        val ids = jdbc.queryForList(sql ){rse->
-            val res = mutableListOf<Long>()
-            while (rse.next()){
-                res.add(rse.getLong(1))
+        val ids = jdbc.queryForList(sql){rs->
+            val res = mutableListOf<Any>()
+            while (rs.next()){
+                val id = rs.get(1, pd.rightKeyProperty.returnType.classifier as KClass<*>)
+                res.add(id ?: error("link table for manyToMany relation has null foreign key"))
             }
             res
         }
