@@ -1,10 +1,12 @@
 package simpleorm.core
 
+import simpleorm.core.filter.FetchFilter
 import simpleorm.core.jdbc.JdbcOperations
 import simpleorm.core.jdbc.ResultSetExtractor
 import simpleorm.core.jdbc.setValues
+import simpleorm.core.pagination.Page
+import simpleorm.core.pagination.Pageable
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty1
 
 class DefaultRepo<T: Any, ID: Any>(
         private val jdbc: JdbcOperations,
@@ -36,7 +38,15 @@ class DefaultRepo<T: Any, ID: Any>(
         }
     }
 
-    override fun findBy(spec: Map<KProperty1<T, Any>, Any>): List<T> {
+    override fun findAll(pageable: Pageable): Page<T> {
+        error("operation is unsupported for $kClass. Use custom query instead")
+    }
+
+    override fun findBy(filters: List<FetchFilter>): List<T>{
+        error("operation is unsupported for $kClass. Use custom query instead")
+    }
+
+    override fun findBy(filters: List<FetchFilter>, pageable: Pageable): Page<T> {
         error("operation is unsupported for $kClass. Use custom query instead")
     }
 

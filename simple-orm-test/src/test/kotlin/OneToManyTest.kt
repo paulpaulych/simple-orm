@@ -5,6 +5,7 @@ import io.kotlintest.specs.FunSpec
 import paulpaulych.utils.ResourceLoader
 import simpleorm.core.*
 import simpleorm.core.delegate.JdbcDelegateCreator
+import simpleorm.core.filter.HashMapFilterResolverRepo
 import simpleorm.core.jdbc.JdbcTemplate
 import simpleorm.core.jdbc.ResultSetExtractor
 import simpleorm.core.jdbc.SingleOperationConnectionHolder
@@ -69,7 +70,8 @@ class OneToManyTest: FunSpec() {
                                 jdbc,
                                 SimpleQueryGenerator()
                         )
-                )
+                ),
+                HashMapFilterResolverRepo(ormSchema)
         )
 
         RepoRegistryProvider.repoRegistry = RepoRegistry(

@@ -4,19 +4,28 @@ import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
 import paulpaulych.utils.LoggerDelegate
 import simpleorm.core.ISimpleOrmRepo
+import simpleorm.core.filter.FetchFilter
+import simpleorm.core.filter.IFilterResolverRepo
+import simpleorm.core.filter.ParameterizableFetchFilter
 import simpleorm.core.jdbc.*
 import simpleorm.core.jdbc.get
+import simpleorm.core.pagination.Page
+import simpleorm.core.pagination.Pageable
+import simpleorm.core.pagination.Sort
 import simpleorm.core.proxy.ProxyGenerator
 import simpleorm.core.proxy.resulsetextractor.CglibRseProxyGenerator
 import simpleorm.core.schema.EntityDescriptor
 import simpleorm.core.schema.property.IdProperty
+import simpleorm.core.schema.property.PlainProperty
+import simpleorm.core.sql.FilteringQuery
+import simpleorm.core.sql.PageableQuery
+import simpleorm.core.sql.Query
 import simpleorm.core.sql.QueryGenerationStrategy
 import simpleorm.core.sql.condition.EqualsCondition
-import simpleorm.core.utils.method
+import simpleorm.core.utils.methodByName
 import java.lang.reflect.Method
 import java.sql.PreparedStatement
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty1
 import kotlin.reflect.jvm.javaMethod
 import simpleorm.core.save as saveGlobal
 
@@ -28,7 +37,7 @@ class RepoMethodInterceptor(
         private val jdbc: JdbcOperations,
         private val queryGenerationStrategy: QueryGenerationStrategy,
         private val proxyGenerator: ProxyGenerator,
-        private val idGenerator: ()->Any
+        private val filterResolverRepo: IFilterResolverRepo
 ): MethodInterceptor {
 
     private val rse = CglibRseProxyGenerator(entityDescriptor.idProperty).create()
@@ -36,47 +45,31 @@ class RepoMethodInterceptor(
     private val log by LoggerDelegate()
 
     override fun intercept(obj: Any, method: Method, args: Array<out Any>, proxy: MethodProxy): Any? {
-        if(method == ISimpleOrmRepo::class.method("findById").javaMethod){
+        if(method == ISimpleOrmRepo::class.methodByName("findById").javaMethod){
             return findById(args.first())
         }
-        if(method == ISimpleOrmRepo::class.method("findAll").javaMethod){
+        if(method.name == "findAll" && method.parameterCount == 0){
             return findAll()
         }
-        if(method == ISimpleOrmRepo::class.method("delete").javaMethod){
+        if(method.name == "findAll" && method.parameterCount != 0 ) {
+            return findAll(args.first() as Pageable)
+        }
+        if(method == ISimpleOrmRepo::class.methodByName("delete").javaMethod){
             return delete(args.first())
         }
-        if(method == ISimpleOrmRepo::class.method("save").javaMethod){
+        if(method == ISimpleOrmRepo::class.methodByName("save").javaMethod){
             return save(args.first())
         }
-        if(method == ISimpleOrmRepo::class.method("query").javaMethod){
+        if(method == ISimpleOrmRepo::class.methodByName("query").javaMethod){
             return query(args[0] as String, args[1] as List<Any>)
         }
-        if(method == ISimpleOrmRepo::class.method("findBy").javaMethod){
-            return findBy(args.first() as Map<KProperty1<Any, Any>, Any>)
+        if(method.name == "findBy" && method.parameterCount == 1){
+            return findBy(args.first() as List<FetchFilter>)
+        }
+        if(method.name == "findBy" && method.parameterCount == 2){
+            return findBy(args.first() as List<FetchFilter>, args[1] as Pageable)
         }
         error("unsupported operation: ${method.name}")
-    }
-
-    private fun findBy(spec: Map<KProperty1<Any, Any>, Any>): List<Any> {
-        log.debug("fetching ${entityDescriptor.kClass} by " +
-                "[${spec.mapKeys { it.key.name }.map{it.toString()}.joinToString(" and ")}]")
-        val spec = spec.toList()
-        val columns = spec.map{
-            entityDescriptor.plainProperties[it.first] ?.column
-                    ?: error("only plainProperties allowed for findBy operation")
-        }
-        val sql = queryGenerationStrategy.select(
-                entityDescriptor.table,
-                listOf(entityDescriptor.idProperty.column),
-                columns.map { EqualsCondition(it) }
-        )
-        val ids = jdbc.doInConnection {connection ->
-            val rs = connection.prepareStatement(sql)
-                    .setValues(spec.map{it.second})
-                    .executeQuery()
-            rse.extract(rs)
-        }
-        return ids.map{ proxyGenerator.createProxyClass(entityDescriptor.kClass, it) }
     }
 
     private fun findById(requiredId: Any): Any? {
@@ -110,6 +103,75 @@ class RepoMethodInterceptor(
                 rse::extract
         )
         return ids.map { proxyGenerator.createProxyClass(entityDescriptor.kClass, it) }
+    }
+
+    private fun findAll(pageable: Pageable): Page<Any> {
+
+        val sorts = mapSorts(pageable.sorts)
+
+        log.debug("fetching all ${entityDescriptor.kClass}")
+        val sql = queryGenerationStrategy.pageableSelect(
+                entityDescriptor.table,
+                listOf(entityDescriptor.idProperty.column),
+                listOf(),
+                sorts
+        )
+        log.warn(sql)
+
+        val ids = jdbc.doInConnection { connection ->
+            val rs = connection.prepareStatement(sql)
+                    .setValues(listOf(pageable.pageSize, pageable.offset))
+                    .executeQuery()
+            rse.extract(rs)
+        }
+
+        return Page(ids.map { proxyGenerator.createProxyClass(entityDescriptor.kClass, it) })
+    }
+
+    private fun findBy(filters: List<FetchFilter>): List<Any>{
+        val stringFilters = filters.map { filter ->
+            filterResolverRepo.getResolver(filter::class).toSql(entityDescriptor.kClass, filter)
+        }
+        val sql = FilteringQuery(
+                Query(
+                    entityDescriptor.table,
+                    listOf(entityDescriptor.idProperty.column)
+                ),
+                stringFilters
+        ).toString()
+        val filterParams = filters.filterIsInstance(ParameterizableFetchFilter::class.java).map { it.value }
+        val ids = jdbc.doInConnection {connection ->
+            val rs = connection.prepareStatement(sql)
+                    .setValues(filterParams)
+                    .executeQuery()
+            rse.extract(rs)
+        }
+        return ids.map{ proxyGenerator.createProxyClass(entityDescriptor.kClass, it) }
+    }
+
+    private fun findBy(filters: List<FetchFilter>, pageable: Pageable): Page<Any>{
+        val sorts = mapSorts(pageable.sorts)
+        val stringFilters = filters.map { filter ->
+            filterResolverRepo.getResolver(filter::class).toSql(entityDescriptor.kClass, filter)
+        }
+        val sql = PageableQuery(
+                FilteringQuery(
+                    Query(
+                            entityDescriptor.table,
+                            listOf(entityDescriptor.idProperty.column)
+                    ),
+                    stringFilters
+                ),
+                sorts
+        ).toString()
+        val filterParams = filters.filterIsInstance(ParameterizableFetchFilter::class.java).map { it.value }
+        val ids = jdbc.doInConnection {connection ->
+            val rs = connection.prepareStatement(sql)
+                    .setValues(filterParams + listOf(pageable.pageSize, pageable.offset))
+                    .executeQuery()
+            rse.extract(rs)
+        }
+        return Page(ids.map{ proxyGenerator.createProxyClass(entityDescriptor.kClass, it) })
     }
 
     private fun update(id: Any, obj: Any): Any{
@@ -307,5 +369,14 @@ class RepoMethodInterceptor(
         }
     }
 
+    private fun mapSorts(sorts: List<Sort>): Map<String, Sort.Order> {
+        return sorts.map { sort ->
+            val pd = entityDescriptor.getPropertyDescriptor(sort.kProperty)
+            if(pd !is PlainProperty){
+                error("cannot sort by non-plain property")
+            }
+            pd.column to sort.order
+        }.toMap()
+    }
 }
 

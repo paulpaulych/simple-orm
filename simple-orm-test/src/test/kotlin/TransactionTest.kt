@@ -7,9 +7,9 @@ import paulpaulych.utils.ResourceLoader
 import simpleorm.core.RepoRegistry
 import simpleorm.core.RepoRegistryProvider
 import simpleorm.core.delegate.JdbcDelegateCreator
+import simpleorm.core.filter.HashMapFilterResolverRepo
 import simpleorm.core.findById
 import simpleorm.core.jdbc.JdbcTemplate
-import simpleorm.core.jdbc.ResultSetExtractor
 import simpleorm.core.proxy.CglibDelegateProxyGenerator
 import simpleorm.core.proxy.repository.CglibRepoProxyGenerator
 import simpleorm.core.save
@@ -21,7 +21,6 @@ import simpleorm.core.transaction.TxSupportedConnectionHolder
 import simpleorm.core.transaction.inTransaction
 import simpleorm.test.Person
 import java.lang.RuntimeException
-import java.sql.ResultSet
 import kotlin.concurrent.thread
 
 class TransactionTest : FunSpec(){
@@ -57,7 +56,8 @@ class TransactionTest : FunSpec(){
                                 jdbc,
                                 SimpleQueryGenerator()
                         )
-                )
+                ),
+                HashMapFilterResolverRepo(ormSchema)
         )
 
         RepoRegistryProvider.repoRegistry = RepoRegistry(

@@ -6,6 +6,9 @@ import io.kotlintest.specs.FunSpec
 import paulpaulych.utils.ResourceLoader
 import simpleorm.core.*
 import simpleorm.core.delegate.JdbcDelegateCreator
+import simpleorm.core.filter.EqFilter
+import simpleorm.core.filter.HashMapFilterResolverRepo
+import simpleorm.core.filter.LikeFilter
 import simpleorm.core.jdbc.JdbcTemplate
 import simpleorm.core.jdbc.SingleOperationConnectionHolder
 import simpleorm.core.proxy.CglibDelegateProxyGenerator
@@ -14,7 +17,6 @@ import simpleorm.core.sql.SimpleQueryGenerator
 import simpleorm.core.schema.yaml.ast.YamlSchemaCreator
 import simpleorm.test.Example
 import simpleorm.test.Person
-import kotlin.reflect.KProperty1
 
 class OrmFunctionsTest : FunSpec(){
 
@@ -55,7 +57,8 @@ class OrmFunctionsTest : FunSpec(){
                                 jdbc,
                                 SimpleQueryGenerator()
                         )
-                )
+                ),
+                HashMapFilterResolverRepo(ormSchema)
         )
 
         RepoRegistryProvider.repoRegistry = RepoRegistry(
@@ -144,22 +147,21 @@ class OrmFunctionsTest : FunSpec(){
         }
 
         test("findBy test"){
-            val examples = Example::class.findBy(Example::stringValue, "goodbye")
-
+            val examples = Example::class.findBy(listOf(EqFilter(Example::stringValue, "goodbye")))
             examples.first() shouldBe Example(3, "goodbye")
         }
 
         test("findBy many filters"){
-            val persons1 = Person::class.findBy(mapOf<KProperty1<Person, Any>, Any>(
-                    Person::age to (29 as Any),
-                    Person::name to ("Bob2" as Any)
+            val persons1 = Person::class.findBy(listOf(
+                    EqFilter(Person::age, 29),
+                    LikeFilter(Person::name, "%2")
             ))
 
             persons1 shouldBe listOf()
 
-            val persons2 = Person::class.findBy(mapOf<KProperty1<Person, Any>, Any>(
-                Person::age to 31,
-                Person::name to "Bob2"
+            val persons2 = Person::class.findBy(listOf(
+                    EqFilter(Person::age, 31),
+                    LikeFilter(Person::name, "%b2")
             ))
 
             persons2.first() shouldBe Person(3, "Bob2", 31)

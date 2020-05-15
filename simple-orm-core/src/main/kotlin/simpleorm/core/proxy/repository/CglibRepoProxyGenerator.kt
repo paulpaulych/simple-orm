@@ -2,6 +2,7 @@ package simpleorm.core.proxy.repository
 
 import net.sf.cglib.proxy.Enhancer
 import simpleorm.core.ISimpleOrmRepo
+import simpleorm.core.filter.IFilterResolverRepo
 import simpleorm.core.jdbc.JdbcOperations
 import simpleorm.core.proxy.ProxyGenerator
 import simpleorm.core.schema.OrmSchema
@@ -12,7 +13,8 @@ class CglibRepoProxyGenerator(
         private val ormSchema: OrmSchema,
         private val jdbc: JdbcOperations,
         private val queryGenerationStrategy: QueryGenerationStrategy,
-        private val proxyGenerator: ProxyGenerator
+        private val proxyGenerator: ProxyGenerator,
+        private val filterResolverRepo: IFilterResolverRepo
 ): IRepoProxyGenerator {
 
     override fun <T : Any> createRepoProxy(kClass: KClass<T>): ISimpleOrmRepo<T, *> {
@@ -23,7 +25,7 @@ class CglibRepoProxyGenerator(
                 jdbc,
                 queryGenerationStrategy,
                 proxyGenerator,
-                SimpleOrmSequenceIdGenerator(jdbc)::generateId
+                filterResolverRepo
         ))
         return enhancer.create() as ISimpleOrmRepo<T, *>
     }

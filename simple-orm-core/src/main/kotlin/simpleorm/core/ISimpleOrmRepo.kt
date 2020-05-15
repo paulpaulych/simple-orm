@@ -1,18 +1,17 @@
 package simpleorm.core
 
-import kotlin.reflect.KProperty1
+import simpleorm.core.filter.FetchFilter
+import simpleorm.core.pagination.Page
+import simpleorm.core.pagination.Pageable
 
 interface ISimpleOrmRepo<T: Any, ID: Any>{
 
     fun findById(id: ID): T?
-
     fun findAll(): List<T>
-
+    fun findAll(pageable: Pageable): Page<T>
+    fun findBy(filters: List<FetchFilter>): List<T>
+    fun findBy(filters: List<FetchFilter>, pageable: Pageable): Page<T>
     fun save(obj: T): T
-
     fun delete(id: ID)
-
     fun query(sql: String, args: List<Any>): List<T>
-
-    fun findBy(spec: Map<KProperty1<T, Any>, Any>): List<T>
 }

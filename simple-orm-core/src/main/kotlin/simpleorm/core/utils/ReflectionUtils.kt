@@ -1,9 +1,6 @@
 package simpleorm.core.utils
 
-import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
-import kotlin.reflect.KMutableProperty1
-import kotlin.reflect.KProperty1
+import kotlin.reflect.*
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.full.declaredMemberProperties
 
@@ -20,7 +17,7 @@ fun <T: Any> KClass<T>.property(name: String): KProperty1<T, *>{
             ?: error("property $name not found in ${this.qualifiedName}")
 }
 
-fun <T: Any> KClass<T>.method(name: String): KFunction<*> {
+fun <T: Any> KClass<T>.methodByName(name: String): KFunction<*> {
     return this.declaredFunctions.find { it.name == name }
             ?: error("property $name not found in ${this.qualifiedName}")
 }

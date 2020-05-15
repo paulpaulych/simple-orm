@@ -1,12 +1,30 @@
 package simpleorm.core.sql
 
+import simpleorm.core.pagination.Sort
 import simpleorm.core.sql.condition.Condition
 
 class SimpleQueryGenerator: QueryGenerationStrategy {
 
     override fun select(table: String, columns: List<String>, conditions: List<Condition>): String {
         val query = Query(table, columns)
-        return FilteringQuery(query, conditions).toString()
+        return FilteringQuery(query, conditions.map { it.toString() }).toString()
+    }
+
+    override fun pageableSelect(
+            table: String,
+            columns: List<String>,
+            conditions: List<Condition>,
+            sorts: Map<String, Sort.Order>): String {
+        return PageableQuery(
+                    FilteringQuery(
+                        Query(
+                            table,
+                            columns
+                        ),
+                        conditions.map { it.toString() }
+                    ),
+                    sorts
+        ).toString()
     }
 
     override fun insert(table: String, columns: List<String>): String {

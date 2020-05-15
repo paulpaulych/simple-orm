@@ -1,22 +1,18 @@
 package simpleorm.core.sql
 
-import simpleorm.core.sql.condition.Condition
-
-data class FilteringQuery(
+class FilteringQuery(
         val query: Query,
-        val conditions: List<Condition> = listOf()
+        val filters: List<String>
 ): SqlFragment {
     override fun toString(): String {
-        val conditions = conditions.fold("") { acc, cond ->
+        val filters = filters.fold("") { acc, filter ->
             """$acc
-    ${if (acc == "") "" else "and"} $cond""".trimIndent()
+    ${if (acc == "") "" else "and"} $filter""".trimIndent()
         }
-        if(conditions.isEmpty()){
+        if(filters.isEmpty()){
             return query.toString()
         }
         return """$query
-where $conditions""".trimIndent()
+where $filters""".trimIndent()
     }
 }
-
-

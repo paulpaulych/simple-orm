@@ -1,8 +1,10 @@
 package simpleorm.core
 
+import simpleorm.core.filter.FetchFilter
 import simpleorm.core.jdbc.JdbcOperations
+import simpleorm.core.pagination.Page
+import simpleorm.core.pagination.Pageable
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty1
 
 interface IRepoRegistry{
     fun <T: Any> findRepo(kClass: KClass<T>): ISimpleOrmRepo<T, Any>
@@ -16,8 +18,7 @@ class RepoRegistry(
     override fun <T : Any> findRepo(kClass: KClass<T>): ISimpleOrmRepo<T, Any> {
         val repo = map[kClass]
                 ?:defaultRepo(kClass)
-//                ?: throw RuntimeException("repo not found for ${kClass.qualifiedName}")
-        return repo as ISimpleOrmRepo<T, Any>
+       return repo as ISimpleOrmRepo<T, Any>
     }
 
     private fun <T: Any> defaultRepo(kClass: KClass<T>): ISimpleOrmRepo<*, *>{
@@ -37,12 +38,24 @@ inline fun <reified T: Any> KClass<T>.findById(id: Any): T?{
     return findRepo(T::class).findById(id)
 }
 
+inline fun <reified T: Any> KClass<T>.findBy(filters: List<FetchFilter>): List<T>{
+    return findRepo(T::class).findBy(filters)
+}
+
+inline fun <reified T: Any> KClass<T>.findBy(filters: List<FetchFilter>, pageable: Pageable): Page<T>{
+    return findRepo(T::class).findBy(filters, pageable)
+}
+
 inline fun <reified T: Any> KClass<T>.query(sql: String, params: List<Any> = listOf()): List<T>{
     return findRepo(T::class).query(sql, params)
 }
 
 inline fun <reified T: Any> KClass<T>.findAll(): List<T>{
     return findRepo(T::class).findAll()
+}
+
+inline fun <reified T: Any> KClass<T>.findAll(pageable: Pageable): Page<T> {
+    return findRepo(T::class).findAll(pageable)
 }
 
 inline fun <reified T: Any> save(value: T): T{
@@ -57,27 +70,13 @@ inline fun <reified T: Any, reified ID: Any> KClass<T>.delete(id: ID){
     return findRepo(T::class).delete(id)
 }
 
-internal fun <T: Any, R: Any> KClass<T>.findBy(kClass: KClass<T>, kProperty1: KProperty1<T, R>, value: R): List<T>{
-    return findRepo(kClass).findBy(mapOf<KProperty1<T, Any>, Any>(kProperty1 to value))
+
+internal fun <T: Any> KClass<T>.findBy(kClass: KClass<T>, filters: List<FetchFilter>): List<T>{
+    return findRepo(kClass).findBy(filters)
 }
-
-internal fun <T: Any, R: Any> KClass<T>.findBy(kClass: KClass<T>, spec: Map<KProperty1<T, Any>, Any>): List<T>{
-    return findRepo(kClass).findBy(spec)
-}
-
-
-inline fun <reified T: Any, reified R: Any> KClass<T>.findBy(kProperty1: KProperty1<T, R>, value: R): List<T>{
-    return findRepo(T::class).findBy(mapOf<KProperty1<T, Any>, Any>(kProperty1 to value))
-}
-
-inline fun <reified T: Any> KClass<T>.findBy(spec: Map<KProperty1<T, Any>, Any>): List<T>{
-    return findRepo(T::class).findBy(spec)
-}
-
 
 fun <T: Any> findRepo(kClass: KClass<T>): ISimpleOrmRepo<T, Any> {
     val repoRegistry = RepoRegistryProvider.repoRegistry
             ?: throw RuntimeException("repoRegistry is not initialized")
     return repoRegistry.findRepo(kClass)
 }
-
