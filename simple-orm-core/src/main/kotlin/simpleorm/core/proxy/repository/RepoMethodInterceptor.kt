@@ -189,9 +189,13 @@ class RepoMethodInterceptor(
 
         entityDescriptor.manyToOneProperties
                 .forEach{ (_, pd) ->
-                    val oneObj = pd.kProperty.get(obj) ?: return@forEach
+                    val oneObj = pd.kProperty.get(obj)
                     columns.add(pd.foreignKeyColumn)
-                    values.add(pd.manyIdProperty.get(oneObj))
+                    if(oneObj != null){
+                        values.add(pd.manyIdProperty.get(oneObj))
+                    }else{
+                        values.add(null)
+                    }
                 }
 
         val sql = queryGenerationStrategy.update(

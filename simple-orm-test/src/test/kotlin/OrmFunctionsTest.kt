@@ -17,6 +17,7 @@ import simpleorm.core.sql.SimpleQueryGenerator
 import simpleorm.core.schema.yaml.ast.YamlSchemaCreator
 import simpleorm.test.Example
 import simpleorm.test.Person
+import simpleorm.test.WithNullable
 
 class OrmFunctionsTest : FunSpec(){
 
@@ -36,6 +37,9 @@ class OrmFunctionsTest : FunSpec(){
                     HikariDataSource(hikariConfig)
                 )
         )
+
+        jdbc.execute("drop table with_nullable if exists")
+        jdbc.execute("create table with_nullable(id bigint auto_increment, opt text)")
 
         jdbc.execute("drop table example if exists")
         jdbc.execute("create table example(long_value bigint auto_increment, string_value text)")
@@ -64,7 +68,8 @@ class OrmFunctionsTest : FunSpec(){
         RepoRegistryProvider.repoRegistry = RepoRegistry(
             mapOf(
                     Example::class to repoProxyGenerator.createRepoProxy(Example::class),
-                    Person::class to repoProxyGenerator.createRepoProxy(Person::class)
+                    Person::class to repoProxyGenerator.createRepoProxy(Person::class),
+                    WithNullable::class to repoProxyGenerator.createRepoProxy(WithNullable::class)
             ),
             jdbc
         )
@@ -119,6 +124,11 @@ class OrmFunctionsTest : FunSpec(){
         test("save existing"){
             val example = save(Example(3, "goodbye"))
             example shouldBe Example(3, "goodbye")
+        }
+
+        test("save existing with nullables"){
+            val withNullable = save(WithNullable())
+            withNullable shouldBe WithNullable(1, null)
         }
 
         test("multiple properties"){
