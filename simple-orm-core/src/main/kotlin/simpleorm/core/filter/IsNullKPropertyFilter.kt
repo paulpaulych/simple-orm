@@ -4,20 +4,18 @@ import simpleorm.core.schema.OrmSchema
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-class LikeFilter(
-        override val kProperty: KProperty1<*, *>,
-        override val value: String
-): KPropertyFilter, ParameterizableFetchFilter
+class IsNullKPropertyFilter(
+        override val kProperty: KProperty1<*, *>
+): KPropertyFilter
 
-
-class LikeFilterResolver(
+class IsNullKPropertyFilterResolver(
         ormSchema: OrmSchema
 ): KPropertyFilterResolver(ormSchema){
 
     override fun toSql(fetchedType: KClass<*>, filter: FetchFilter): String {
-        filter as LikeFilter
+        filter as IsNullKPropertyFilter
         val column = getColumn(fetchedType, filter.kProperty)
-        return "$column LIKE ?"
+        return "$column is NULL"
     }
 
 }

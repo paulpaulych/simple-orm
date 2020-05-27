@@ -11,8 +11,12 @@ import simpleorm.core.jdbc.ResultSetExtractor
 import simpleorm.core.jdbc.SingleOperationConnectionHolder
 import simpleorm.core.proxy.CglibDelegateProxyGenerator
 import simpleorm.core.proxy.repository.CglibRepoProxyGenerator
+import simpleorm.core.schema.naming.SnakeCaseNamingStrategy
 import simpleorm.core.schema.yaml.ast.YamlSchemaCreator
 import simpleorm.core.sql.SimpleQueryGenerator
+import simpleorm.test.Example
+import simpleorm.test.Person
+import simpleorm.test.WithNullable
 import simpleorm.test.manytoone.Owner
 import simpleorm.test.manytoone.Product
 import java.sql.ResultSet
@@ -26,7 +30,7 @@ class OneToManyTest: FunSpec() {
         hikariConfig.driverClassName = "org.h2.Driver"
         hikariConfig.username = "sa"
 
-        val ormSchema = YamlSchemaCreator(ResourceLoader.loadText("product-owner-schema.yml")).create()
+        val ormSchema = YamlSchemaCreator(ResourceLoader.loadText("product-owner-schema.yml"), SnakeCaseNamingStrategy()).create()
 
         val jdbc = JdbcTemplate(
                 SingleOperationConnectionHolder(
@@ -60,6 +64,8 @@ class OneToManyTest: FunSpec() {
         }
 
 
+        val queryGenerationStrategy = SimpleQueryGenerator()
+        val filterResolverRepo = HashMapFilterResolverRepo(ormSchema)
         val repoProxyGenerator = CglibRepoProxyGenerator(
                 ormSchema,
                 jdbc,
@@ -68,10 +74,10 @@ class OneToManyTest: FunSpec() {
                         ormSchema,
                         JdbcDelegateCreator(
                                 jdbc,
-                                SimpleQueryGenerator()
+                                queryGenerationStrategy
                         )
                 ),
-                HashMapFilterResolverRepo(ormSchema)
+                filterResolverRepo
         )
 
         RepoRegistryProvider.repoRegistry = RepoRegistry(
@@ -79,7 +85,13 @@ class OneToManyTest: FunSpec() {
                         Product::class to repoProxyGenerator.createRepoProxy(Product::class),
                         Owner::class to repoProxyGenerator.createRepoProxy(Owner::class)
                 ),
-                jdbc
+                jdbc,
+                CachingDefaultRepoFactory(
+                        jdbc,
+                        queryGenerationStrategy,
+                        filterResolverRepo,
+                        ormSchema.namingStrategy
+                )
         )
 
         test("findById"){

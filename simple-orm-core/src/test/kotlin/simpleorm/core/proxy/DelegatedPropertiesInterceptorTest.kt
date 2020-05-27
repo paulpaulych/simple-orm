@@ -12,48 +12,48 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.primaryConstructor
 
-class DelegatedPropertiesInterceptorTest: FunSpec(){
-
-    private val initialValue = "initial value"
-
-    init {
-        test("hey, Joe!"){
-            val kClass = Class.forName(A::class.java.name).kotlin
-            val interceptor = DelegatedPropertiesInterceptor(
-                    kClass as KClass<Any>,
-                    kClass.mutableProperties().map { it to MutableDelegate(initialValue)}.toMap(),
-                    kClass.immutableProperties().map { it to ImmutableDelegate(initialValue) }.toMap()
-            )
-            val enhancer = Enhancer()
-            enhancer.setSuperclass(A::class.java)
-            enhancer.setCallbackType(DelegatedPropertiesInterceptor::class.java)
-            enhancer.setCallbackFilter { 0 }
-            val proxyClass = enhancer.createClass()
-            println(proxyClass.constructors.map { it.toString() })
-//                    arrayOf(
-//                            KClass::class.java,
+//class DelegatedPropertiesInterceptorTest: FunSpec(){
 //
-//                            ),
-                    arrayOf(String::class.java)
+//    private val initialValue = "initial value"
+//
+//    init {
+//        test("hey, Joe!"){
+//            val kClass = Class.forName(A::class.java.name).kotlin
+//            val interceptor = DelegatedPropertiesInterceptor(
+//                    kClass as KClass<Any>,
+//                    kClass.mutableProperties().map { it to MutableDelegate(initialValue)}.toMap(),
+//                    kClass.immutableProperties().map { it to ImmutableDelegate(initialValue) }.toMap()
 //            )
-            val proxy = (proxyClass.kotlin.primaryConstructor?.call(
-                    kClass,
-                    kClass.mutableProperties().map { it to MutableDelegate(initialValue)}.toMap(),
-                    kClass.immutableProperties().map { it to ImmutableDelegate(initialValue) }.toMap()
-            )?:proxyClass.kotlin.constructors.find { it.parameters.isEmpty() }?.call()
-            ?: error("no constructor found")) as A
-
-            proxy.immutable shouldBe initialValue
-            proxy.mutable shouldBe initialValue
-
-            proxy.mutable = "hello"
-            proxy.mutable shouldBe "hello"
-            proxy.func("h") shouldBe "h"
-
-        }
-    }
-
-}
+//            val enhancer = Enhancer()
+//            enhancer.setSuperclass(A::class.java)
+//            enhancer.setCallbackType(DelegatedPropertiesInterceptor::class.java)
+//            enhancer.setCallbackFilter { 0 }
+//            val proxyClass = enhancer.createClass()
+//            println(proxyClass.constructors.map { it.toString() })
+////                    arrayOf(
+////                            KClass::class.java,
+////
+////                            ),
+//                    arrayOf(String::class.java)
+////            )
+//            val proxy = (proxyClass.kotlin.primaryConstructor?.call(
+//                    kClass,
+//                    kClass.mutableProperties().map { it to MutableDelegate(initialValue)}.toMap(),
+//                    kClass.immutableProperties().map { it to ImmutableDelegate(initialValue) }.toMap()
+//            )?:proxyClass.kotlin.constructors.find { it.parameters.isEmpty() }?.call()
+//            ?: error("no constructor found")) as A
+//
+//            proxy.immutable shouldBe initialValue
+//            proxy.mutable shouldBe initialValue
+//
+//            proxy.mutable = "hello"
+//            proxy.mutable shouldBe "hello"
+//            proxy.func("h") shouldBe "h"
+//
+//        }
+//    }
+//
+//}
 
 @Open
 private class A(

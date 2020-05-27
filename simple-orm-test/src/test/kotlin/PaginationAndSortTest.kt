@@ -4,22 +4,22 @@ import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 import paulpaulych.utils.LoggerDelegate
 import paulpaulych.utils.ResourceLoader
-import simpleorm.core.RepoRegistry
-import simpleorm.core.RepoRegistryProvider
+import simpleorm.core.*
 import simpleorm.core.delegate.JdbcDelegateCreator
 import simpleorm.core.filter.HashMapFilterResolverRepo
-import simpleorm.core.filter.LikeFilter
-import simpleorm.core.findAll
-import simpleorm.core.findBy
+import simpleorm.core.filter.LikeKPropertyFilter
 import simpleorm.core.jdbc.JdbcTemplate
 import simpleorm.core.jdbc.SingleOperationConnectionHolder
 import simpleorm.core.pagination.PageRequest
 import simpleorm.core.pagination.Sort
 import simpleorm.core.proxy.CglibDelegateProxyGenerator
 import simpleorm.core.proxy.repository.CglibRepoProxyGenerator
+import simpleorm.core.schema.naming.SnakeCaseNamingStrategy
 import simpleorm.core.schema.yaml.ast.YamlSchemaCreator
 import simpleorm.core.sql.SimpleQueryGenerator
 import simpleorm.test.Example
+import simpleorm.test.Person
+import simpleorm.test.WithNullable
 
 class PaginationAndSortTest: FunSpec() {
 
@@ -32,7 +32,7 @@ class PaginationAndSortTest: FunSpec() {
         hikariConfig.driverClassName = "org.h2.Driver"
         hikariConfig.username = "sa"
 
-        val ormSchema = YamlSchemaCreator(ResourceLoader.loadText("test-schema.yml")).create()
+        val ormSchema = YamlSchemaCreator(ResourceLoader.loadText("test-schema.yml"), SnakeCaseNamingStrategy()).create()
 
         val jdbc = JdbcTemplate(
                 SingleOperationConnectionHolder(
@@ -47,6 +47,8 @@ class PaginationAndSortTest: FunSpec() {
         jdbc.execute("insert into example(string_value) values('third')")
         jdbc.execute("insert into example(string_value) values('fourth')")
 
+        val queryGenerationStrategy = SimpleQueryGenerator()
+        val filterResolverRepo = HashMapFilterResolverRepo(ormSchema)
         val repoProxyGenerator = CglibRepoProxyGenerator(
                 ormSchema,
                 jdbc,
@@ -55,17 +57,23 @@ class PaginationAndSortTest: FunSpec() {
                         ormSchema,
                         JdbcDelegateCreator(
                                 jdbc,
-                                SimpleQueryGenerator()
+                                queryGenerationStrategy
                         )
                 ),
-                HashMapFilterResolverRepo(ormSchema)
+                filterResolverRepo
         )
 
         RepoRegistryProvider.repoRegistry = RepoRegistry(
                 mapOf(
                         Example::class to repoProxyGenerator.createRepoProxy(Example::class)
                 ),
-                jdbc
+                jdbc,
+                CachingDefaultRepoFactory(
+                        jdbc,
+                        queryGenerationStrategy,
+                        filterResolverRepo,
+                        ormSchema.namingStrategy
+                )
         )
 
         test("findAll 1 element pages"){
@@ -137,13 +145,13 @@ class PaginationAndSortTest: FunSpec() {
         test("findBy paging"){
             val pageRequest = PageRequest(0, 1, listOf(Sort(Example::longValue, Sort.Order.DESC)))
             val firstPage = Example::class.findBy(
-                    listOf(LikeFilter(Example::stringValue, "%i%")),
+                    listOf(LikeKPropertyFilter(Example::stringValue, "%i%")),
                     pageRequest)
             firstPage.values shouldBe listOf(
                     Example(3, "third")
             )
             val secondPage = Example::class.findBy(
-                    listOf(LikeFilter(Example::stringValue, "%i%")),
+                    listOf(LikeKPropertyFilter(Example::stringValue, "%i%")),
                     pageRequest.next)
             secondPage.values shouldBe listOf(
                     Example(1, "first")

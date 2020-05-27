@@ -11,8 +11,11 @@ import simpleorm.core.jdbc.JdbcTemplate
 import simpleorm.core.jdbc.SingleOperationConnectionHolder
 import simpleorm.core.proxy.CglibDelegateProxyGenerator
 import simpleorm.core.proxy.repository.CglibRepoProxyGenerator
+import simpleorm.core.schema.naming.SnakeCaseNamingStrategy
 import simpleorm.core.schema.yaml.ast.YamlSchemaCreator
 import simpleorm.core.sql.SimpleQueryGenerator
+import simpleorm.test.manytoone.Owner
+import simpleorm.test.manytoone.Product
 
 @Open
 data class Book(
@@ -36,7 +39,7 @@ class ManyToManyTest : FunSpec(){
         hikariConfig.driverClassName = "org.h2.Driver"
         hikariConfig.username = "sa"
 
-        val ormSchema = YamlSchemaCreator(ResourceLoader.loadText("book-color-schema.yml")).create()
+        val ormSchema = YamlSchemaCreator(ResourceLoader.loadText("book-color-schema.yml"), SnakeCaseNamingStrategy()).create()
 
         val jdbc = JdbcTemplate(
                 SingleOperationConnectionHolder(
@@ -63,6 +66,8 @@ class ManyToManyTest : FunSpec(){
 
         jdbc.execute("insert into book_color values(1, 1, 2)")
 
+        val queryGenerationStrategy = SimpleQueryGenerator()
+        val filterResolverRepo = HashMapFilterResolverRepo(ormSchema)
         val repoProxyGenerator = CglibRepoProxyGenerator(
                 ormSchema,
                 jdbc,
@@ -71,10 +76,10 @@ class ManyToManyTest : FunSpec(){
                         ormSchema,
                         JdbcDelegateCreator(
                                 jdbc,
-                                SimpleQueryGenerator()
+                                queryGenerationStrategy
                         )
                 ),
-                HashMapFilterResolverRepo(ormSchema)
+                filterResolverRepo
         )
 
         RepoRegistryProvider.repoRegistry = RepoRegistry(
@@ -82,7 +87,13 @@ class ManyToManyTest : FunSpec(){
                         Book::class to repoProxyGenerator.createRepoProxy(Book::class),
                         Color::class to repoProxyGenerator.createRepoProxy(Color::class)
                 ),
-                jdbc
+                jdbc,
+                CachingDefaultRepoFactory(
+                        jdbc,
+                        queryGenerationStrategy,
+                        filterResolverRepo,
+                        ormSchema.namingStrategy
+                )
         )
 
         test("findById"){

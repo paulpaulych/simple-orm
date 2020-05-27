@@ -2,7 +2,7 @@ package simpleorm.core.transaction
 
 import org.slf4j.LoggerFactory
 
-fun inTransaction(action: () -> Unit){
+fun <T: Any> inTransaction(action: () -> T): T{
 
     //TODO: использовать более подходящий логгер
     val log = LoggerFactory.getLogger(TransactionDefinition::class.java)
@@ -16,8 +16,9 @@ fun inTransaction(action: () -> Unit){
 
     TransactionHolder.setCurrentTransaction(transaction)
 
+    val result: T
     try {
-        action.invoke()
+        result = action.invoke()
     }catch (e: Throwable){
         transactionManager.rollback(transaction)
         TransactionHolder.clear()
@@ -27,4 +28,6 @@ fun inTransaction(action: () -> Unit){
     transactionManager.commit(transaction)
     TransactionHolder.clear()
     log.trace("transaction $transaction committed")
+
+    return result
 }

@@ -4,15 +4,13 @@ import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 import kotlinx.coroutines.delay
 import paulpaulych.utils.ResourceLoader
-import simpleorm.core.RepoRegistry
-import simpleorm.core.RepoRegistryProvider
+import simpleorm.core.*
 import simpleorm.core.delegate.JdbcDelegateCreator
 import simpleorm.core.filter.HashMapFilterResolverRepo
-import simpleorm.core.findById
 import simpleorm.core.jdbc.JdbcTemplate
 import simpleorm.core.proxy.CglibDelegateProxyGenerator
 import simpleorm.core.proxy.repository.CglibRepoProxyGenerator
-import simpleorm.core.save
+import simpleorm.core.schema.naming.SnakeCaseNamingStrategy
 import simpleorm.core.schema.yaml.ast.YamlSchemaCreator
 import simpleorm.core.sql.SimpleQueryGenerator
 import simpleorm.core.transaction.LocalDataSourceTransactionManager
@@ -20,6 +18,8 @@ import simpleorm.core.transaction.TransactionManagerHolder
 import simpleorm.core.transaction.TxSupportedConnectionHolder
 import simpleorm.core.transaction.inTransaction
 import simpleorm.test.Person
+import simpleorm.test.manytoone.Owner
+import simpleorm.test.manytoone.Product
 import java.lang.RuntimeException
 import kotlin.concurrent.thread
 
@@ -33,7 +33,7 @@ class TransactionTest : FunSpec(){
         hikariConfig.username = "sa"
 
         val hikariDataSource = HikariDataSource(hikariConfig)
-        val ormSchema = YamlSchemaCreator(ResourceLoader.loadText("test-schema.yml")).create()
+        val ormSchema = YamlSchemaCreator(ResourceLoader.loadText("test-schema.yml"), SnakeCaseNamingStrategy()).create()
 
         TransactionManagerHolder.transactionManager = LocalDataSourceTransactionManager(hikariDataSource)
 
@@ -46,6 +46,8 @@ class TransactionTest : FunSpec(){
         jdbc.execute("drop table person if exists")
         jdbc.execute("create table person(id bigint primary key auto_increment, name text, age integer)")
 
+        val queryGenerationStrategy = SimpleQueryGenerator()
+        val filterResolverRepo = HashMapFilterResolverRepo(ormSchema)
         val repoProxyGenerator = CglibRepoProxyGenerator(
                 ormSchema,
                 jdbc,
@@ -54,17 +56,23 @@ class TransactionTest : FunSpec(){
                         ormSchema,
                         JdbcDelegateCreator(
                                 jdbc,
-                                SimpleQueryGenerator()
+                                queryGenerationStrategy
                         )
                 ),
-                HashMapFilterResolverRepo(ormSchema)
+                filterResolverRepo
         )
 
         RepoRegistryProvider.repoRegistry = RepoRegistry(
                 mapOf(
                         Person::class to repoProxyGenerator.createRepoProxy(Person::class)
                 ),
-                jdbc
+                jdbc,
+                CachingDefaultRepoFactory(
+                        jdbc,
+                        queryGenerationStrategy,
+                        filterResolverRepo,
+                        ormSchema.namingStrategy
+                )
         )
 
         test("tx commit"){

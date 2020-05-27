@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import simpleorm.core.schema.EntityDescriptor
 import simpleorm.core.schema.OrmSchema
 import simpleorm.core.schema.SchemaCreator
+import simpleorm.core.schema.naming.INamingStrategy
 import simpleorm.core.schema.property.*
 import simpleorm.core.utils.property
 import kotlin.reflect.KClass
@@ -13,7 +14,8 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.full.declaredMemberProperties
 
 class YamlSchemaCreator(
-        private val rawText: String
+        private val rawText: String,
+        private val namingStrategy: INamingStrategy
 ): SchemaCreator {
 
     private val eds = mutableListOf<EntityDescriptor<*>>()
@@ -30,7 +32,8 @@ class YamlSchemaCreator(
             rawOrmSchema.entities.map{ (className, rawEntityDescriptor) ->
                 val entityClass = Class.forName(className).kotlin
                 return@map entityClass to convertRawEntityDescriptor(entityClass, rawEntityDescriptor)
-            }.toMap()
+            }.toMap(),
+            namingStrategy
         )
     }
 

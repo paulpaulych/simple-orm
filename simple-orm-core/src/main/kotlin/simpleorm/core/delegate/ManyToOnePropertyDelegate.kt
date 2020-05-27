@@ -1,7 +1,7 @@
 package simpleorm.core.delegate
 
 import paulpaulych.utils.LoggerDelegate
-import simpleorm.core.filter.EqFilter
+import simpleorm.core.filter.EqKPropertyFilter
 import simpleorm.core.findBy
 import simpleorm.core.jdbc.JdbcOperations
 import simpleorm.core.jdbc.ResultSetExtractor
@@ -32,7 +32,7 @@ class ManyToOnePropertyDelegate<T: Any>(
         val foreignKeyValue = jdbc.queryForObject(sql,rse::extract)
                 ?: return null
         log.trace("manyToOne id: $foreignKeyValue. fetching by this id...")
-        val res = pd.kClass.findBy(pd.kClass, listOf(EqFilter(pd.manyIdProperty as KProperty1<T, Any>, foreignKeyValue)))
+        val res = pd.kClass.findBy(pd.kClass, listOf(EqKPropertyFilter(pd.manyIdProperty as KProperty1<T, Any>, foreignKeyValue)))
         if(res.size != 1){
             error("expected result size: 1, got: ${res.size}")
         }

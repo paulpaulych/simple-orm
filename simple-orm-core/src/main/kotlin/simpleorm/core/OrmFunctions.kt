@@ -12,7 +12,8 @@ interface IRepoRegistry{
 
 class RepoRegistry(
         private val map: Map<KClass<*>, ISimpleOrmRepo<*, *>> = mapOf(),
-        private val jdbc: JdbcOperations
+        private val jdbc: JdbcOperations,
+        private val defaultRepoFactory: IDefaultRepoFactory
 ): IRepoRegistry{
 
     override fun <T : Any> findRepo(kClass: KClass<T>): ISimpleOrmRepo<T, Any> {
@@ -22,11 +23,7 @@ class RepoRegistry(
     }
 
     private fun <T: Any> defaultRepo(kClass: KClass<T>): ISimpleOrmRepo<*, *>{
-        return DefaultRepo<T, Any>(
-                jdbc,
-                kClass,
-                DefaultResultSetExtractor(kClass)
-        )
+        return defaultRepoFactory.create(kClass)
     }
 }
 

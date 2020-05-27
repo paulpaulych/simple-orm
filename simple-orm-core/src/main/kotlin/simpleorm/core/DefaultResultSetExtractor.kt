@@ -2,13 +2,17 @@ package simpleorm.core
 
 import simpleorm.core.jdbc.ResultSetExtractor
 import simpleorm.core.jdbc.get
+import simpleorm.core.schema.naming.INamingStrategy
+import simpleorm.core.schema.naming.SnakeCaseNamingStrategy
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.primaryConstructor
 
 class DefaultResultSetExtractor<T: Any>(
-        private val kClass: KClass<T>
+        kClass: KClass<T>,
+        private val namingStrategy: INamingStrategy
+            = SnakeCaseNamingStrategy()
 ): ResultSetExtractor<T> {
 
     private val primaryConstructor = kClass.primaryConstructor
@@ -21,7 +25,10 @@ class DefaultResultSetExtractor<T: Any>(
         while (resultSet.next()){
             val args = mutableMapOf<KParameter, T>()
             constructorParameters.forEach{
-                args[it] = resultSet.get(it.name!!, it.type.classifier as KClass<*>) as T
+                val constructorParameterName = it.name
+                        ?: error("constructor parameter $it has no name")
+                val columnName = namingStrategy.toColumnName(constructorParameterName)
+                args[it] = resultSet.get(columnName, it.type.classifier as KClass<*>) as T
             }
             res += primaryConstructor.callBy(args)
         }
