@@ -143,13 +143,13 @@ class PaginationAndSortTest: FunSpec() {
         test("findBy paging"){
             val pageRequest = PageRequest(0, 1, listOf(Sort(Example::longValue, Sort.Order.DESC)))
             val firstPage = Example::class.findBy(
-                    listOf(LikeFilter(Example::stringValue, "%i%")),
+                    LikeFilter(Example::stringValue, "%i%"),
                     pageRequest)
             firstPage.values shouldBe listOf(
                     Example(3, "third")
             )
             val secondPage = Example::class.findBy(
-                    listOf(LikeFilter(Example::stringValue, "%i%")),
+                    LikeFilter(Example::stringValue, "%i%"),
                     pageRequest.next)
             secondPage.values shouldBe listOf(
                     Example(1, "first")

@@ -81,7 +81,7 @@ class DefaultRepoTest: FunSpec() {
 
         test("findBy"){
             DefaultExample::class.findBy(
-                    listOf(EqFilter(DefaultExample::one_two, "second"))
+                    EqFilter(DefaultExample::one_two, "second")
             ) shouldBe listOf(DefaultExample(2, "second"))
         }
 

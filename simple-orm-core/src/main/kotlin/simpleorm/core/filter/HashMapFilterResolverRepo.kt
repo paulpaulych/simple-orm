@@ -12,7 +12,14 @@ class HashMapFilterResolverRepo(
             EqFilter::class to EqFilterResolver(ormSchema),
             LikeFilter::class to LikeFilterResolver(ormSchema),
             NonNullFilter::class to NonNullFilterResolver(ormSchema),
-            IsNullFilter::class to IsNullFilterResolver(ormSchema)
+            IsNullFilter::class to IsNullFilterResolver(ormSchema),
+            AndFilter::class to AndFilterResolver(),
+            OrFilter::class to OrFilterResolver(),
+            NotEqFilter::class to NotEqFilterResolver(ormSchema),
+            LessFilter::class to LessFilterResolver(ormSchema),
+            GreaterFilter::class to GreaterFilterResolver(ormSchema),
+            LessEqFilter::class to LessEqFilterResolver(ormSchema),
+            GreaterEqFilter::class to GreaterEqFilterResolver(ormSchema)
     )
 
     init {

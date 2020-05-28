@@ -39,7 +39,7 @@ class ManyToManyPropertyDelegate<T: Any>(
         return ids.fold(mutableListOf()){ acc, id->
             val found = pd.kClass.findBy(
                 pd.kClass,
-                listOf(EqFilter(pd.rightKeyProperty as KProperty1<T, Any>, id))
+                EqFilter(pd.rightKeyProperty as KProperty1<T, Any>, id)
             )
             if(found.isEmpty()){
                 error("right side with id = $id not found")

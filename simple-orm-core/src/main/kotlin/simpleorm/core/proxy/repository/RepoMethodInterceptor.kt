@@ -63,10 +63,10 @@ class RepoMethodInterceptor(
             return query(args[0] as String, args[1] as List<Any>)
         }
         if(method.name == "findBy" && method.parameterCount == 1){
-            return findBy(args.first() as List<FetchFilter>)
+            return findBy(args.first() as FetchFilter)
         }
         if(method.name == "findBy" && method.parameterCount == 2){
-            return findBy(args.first() as List<FetchFilter>, args[1] as Pageable)
+            return findBy(args.first() as FetchFilter, args[1] as Pageable)
         }
         error("unsupported operation: ${method.name}")
     }
@@ -127,18 +127,17 @@ class RepoMethodInterceptor(
         return Page(ids.map { proxyGenerator.createProxyClass(entityDescriptor.kClass, it) })
     }
 
-    private fun findBy(filters: List<FetchFilter>): List<Any>{
-        val stringFilters = filters.map { filter ->
-            filterResolverRepo.getResolver(filter::class).toSql(entityDescriptor.kClass, filter, filterResolverRepo)
-        }
+    private fun findBy(filter: FetchFilter): List<Any>{
+        val stringFilter = filterResolverRepo.getResolver(filter::class).toSql(entityDescriptor.kClass, filter, filterResolverRepo)
+
         val sql = FilteringQuery(
                 Query(
                     entityDescriptor.table,
                     listOf(entityDescriptor.idProperty.column)
                 ),
-                stringFilters
+                listOf(stringFilter)
         ).toString()
-        val filterParams = filters.flatMap { it.params }
+        val filterParams = filter.params
         val ids = jdbc.doInConnection {connection ->
             val rs = connection.prepareStatement(sql)
                     .setValues(filterParams)
@@ -148,22 +147,21 @@ class RepoMethodInterceptor(
         return ids.map{ proxyGenerator.createProxyClass(entityDescriptor.kClass, it) }
     }
 
-    private fun findBy(filters: List<FetchFilter>, pageable: Pageable): Page<Any>{
+    private fun findBy(filter: FetchFilter, pageable: Pageable): Page<Any>{
         val sorts = mapSorts(pageable.sorts)
-        val stringFilters = filters.map { filter ->
-            filterResolverRepo.getResolver(filter::class).toSql(entityDescriptor.kClass, filter, filterResolverRepo)
-        }
+        val stringFilter = filterResolverRepo.getResolver(filter::class).toSql(entityDescriptor.kClass, filter, filterResolverRepo)
+
         val sql = PageableQuery(
                 FilteringQuery(
                     Query(
                             entityDescriptor.table,
                             listOf(entityDescriptor.idProperty.column)
                     ),
-                    stringFilters
+                    listOf(stringFilter)
                 ),
                 sorts
         ).toString()
-        val filterParams = filters.flatMap { it.params }
+        val filterParams = filter.params
         val ids = jdbc.doInConnection {connection ->
             val rs = connection.prepareStatement(sql)
                     .setValues(filterParams + listOf(pageable.pageSize, pageable.offset))

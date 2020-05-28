@@ -1,8 +1,10 @@
 package simpleorm.core.delegate
 
 import simpleorm.core.filter.EqFilter
-import simpleorm.core.findBy
+import simpleorm.core.filter.FetchFilter
+import simpleorm.core.findRepo
 import simpleorm.core.schema.property.OneToManyProperty
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
@@ -14,11 +16,9 @@ class OneToManyPropertyDelegate<T: Any>(
     override fun getValue(thisRef: Any, property: KProperty<*>): List<T> {
         return oneToManyProperty.kClass.findBy(
                 oneToManyProperty.kClass,
-                listOf(
-                    EqFilter(
-                        oneToManyProperty.foreignKey as KProperty1<T, Any>,
-                        id
-                    )
+                EqFilter(
+                    oneToManyProperty.foreignKey as KProperty1<T, Any>,
+                    id
                 )
             )
     }
@@ -27,4 +27,8 @@ class OneToManyPropertyDelegate<T: Any>(
         error("setting the value is prohibited")
     }
 
+}
+
+internal fun <T: Any> KClass<T>.findBy(kClass: KClass<T>, filter: FetchFilter): List<T>{
+    return findRepo(kClass).findBy(filter)
 }

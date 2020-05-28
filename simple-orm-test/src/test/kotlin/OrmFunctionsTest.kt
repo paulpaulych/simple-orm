@@ -6,6 +6,7 @@ import io.kotlintest.specs.FunSpec
 import paulpaulych.utils.ResourceLoader
 import simpleorm.core.*
 import simpleorm.core.delegate.JdbcDelegateCreator
+import simpleorm.core.filter.AndFilter
 import simpleorm.core.filter.EqFilter
 import simpleorm.core.filter.HashMapFilterResolverRepo
 import simpleorm.core.filter.LikeFilter
@@ -165,19 +166,19 @@ class OrmFunctionsTest : FunSpec(){
 //        }
 
         test("findBy test"){
-            val examples = Example::class.findBy(listOf(EqFilter(Example::stringValue, "goodbye")))
+            val examples = Example::class.findBy(EqFilter(Example::stringValue, "goodbye"))
             examples.first() shouldBe Example(3, "goodbye")
         }
 
         test("findBy many filters"){
-            val persons1 = Person::class.findBy(listOf(
+            val persons1 = Person::class.findBy(AndFilter(
                     EqFilter(Person::age, 29),
                     LikeFilter(Person::name, "%2")
             ))
 
             persons1 shouldBe listOf()
 
-            val persons2 = Person::class.findBy(listOf(
+            val persons2 = Person::class.findBy(AndFilter(
                     EqFilter(Person::age, 31),
                     LikeFilter(Person::name, "%b2")
             ))

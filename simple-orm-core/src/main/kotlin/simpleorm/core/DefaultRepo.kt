@@ -156,17 +156,29 @@ class DefaultRepo<T: Any, ID: Any>(
     }
 
     override fun findAll(pageable: Pageable): Page<T> {
-        return findBy(listOf(), pageable)
+       val sql = PageableQuery(
+                FilteringQuery(
+                        Query(table, columns),
+                        listOf()
+                ),
+                mapSorts(pageable.sorts)
+        ).toString()
+        val result = jdbc.doInConnection {connection ->
+            val rs = connection.prepareStatement(sql)
+                    .setValues(listOf(pageable.pageSize, pageable.offset))
+                    .executeQuery()
+            rse.extract(rs)
+        }
+        return Page(result)
     }
 
-    override fun findBy(filters: List<FetchFilter>): List<T>{
-        val stringFilters = filters.map { filter ->
-            filterResolverRepo.getResolver(filter::class).toSql(kClass, filter, filterResolverRepo)
-        }
-        val filterParams = filters.flatMap { it.params }
+    override fun findBy(filter: FetchFilter): List<T>{
+        val stringFilter = filterResolverRepo.getResolver(filter::class).toSql(kClass, filter, filterResolverRepo)
+
+        val filterParams = filter.params
         val sql = FilteringQuery(
                 Query(table, columns),
-                stringFilters
+                listOf(stringFilter)
         ).toString()
         return jdbc.doInConnection {connection ->
             val rs = connection.prepareStatement(sql)
@@ -177,18 +189,17 @@ class DefaultRepo<T: Any, ID: Any>(
 
     }
 
-    override fun findBy(filters: List<FetchFilter>, pageable: Pageable): Page<T> {
-        val stringFilters = filters.map { filter ->
-            filterResolverRepo.getResolver(filter::class).toSql(kClass, filter, filterResolverRepo)
-        }
+    override fun findBy(filter: FetchFilter, pageable: Pageable): Page<T> {
+        val stringFilter = filterResolverRepo.getResolver(filter::class).toSql(kClass, filter, filterResolverRepo)
+
         val sql = PageableQuery(
                 FilteringQuery(
                         Query(table, columns),
-                        stringFilters
+                        listOf(stringFilter)
                 ),
                 mapSorts(pageable.sorts)
         ).toString()
-        val filterParams = filters.flatMap { it.params }
+        val filterParams = filter.params
         val result = jdbc.doInConnection {connection ->
             val rs = connection.prepareStatement(sql)
                     .setValues(filterParams + listOf(pageable.pageSize, pageable.offset))

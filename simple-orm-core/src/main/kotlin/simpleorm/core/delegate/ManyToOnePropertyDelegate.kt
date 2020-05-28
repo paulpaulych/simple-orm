@@ -32,7 +32,7 @@ class ManyToOnePropertyDelegate<T: Any>(
         val foreignKeyValue = jdbc.queryForObject(sql,rse::extract)
                 ?: return null
         log.trace("manyToOne id: $foreignKeyValue. fetching by this id...")
-        val res = pd.kClass.findBy(pd.kClass, listOf(EqFilter(pd.manyIdProperty as KProperty1<T, Any>, foreignKeyValue)))
+        val res = pd.kClass.findBy(pd.kClass, EqFilter(pd.manyIdProperty as KProperty1<T, Any>, foreignKeyValue))
         if(res.size != 1){
             error("expected result size: 1, got: ${res.size}")
         }
