@@ -23,12 +23,12 @@ class DefaultResultSetExtractor<T: Any>(
     override fun extract(resultSet: ResultSet): List<T> {
         val res = mutableListOf<T>()
         while (resultSet.next()){
-            val args = mutableMapOf<KParameter, T>()
+            val args = mutableMapOf<KParameter, Any?>()
             constructorParameters.forEach{
                 val constructorParameterName = it.name
                         ?: error("constructor parameter $it has no name")
                 val columnName = namingStrategy.toColumnName(constructorParameterName)
-                args[it] = resultSet.get(columnName, it.type.classifier as KClass<*>) as T
+                args[it] = resultSet.get(columnName, it.type.classifier as KClass<*>)
             }
             res += primaryConstructor.callBy(args)
         }

@@ -9,10 +9,10 @@ class HashMapFilterResolverRepo(
 ): IFilterResolverRepo {
 
     private val resolversMap = mutableMapOf<KClass<out FetchFilter>, FilterResolver>(
-            EqKPropertyFilter::class to EqKPropertyFilterResolver(ormSchema),
-            LikeKPropertyFilter::class to LikeKPropertyFilterResolver(ormSchema),
-            NonNullKPropertyFilter::class to NonNullKPropertyFilterResolver(ormSchema),
-            IsNullKPropertyFilter::class to IsNullKPropertyFilterResolver(ormSchema)
+            EqFilter::class to EqFilterResolver(ormSchema),
+            LikeFilter::class to LikeFilterResolver(ormSchema),
+            NonNullFilter::class to NonNullFilterResolver(ormSchema),
+            IsNullFilter::class to IsNullFilterResolver(ormSchema)
     )
 
     init {

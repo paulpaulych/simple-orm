@@ -1,6 +1,6 @@
 package simpleorm.core
 
-import simpleorm.core.filter.EqKPropertyFilter
+import simpleorm.core.filter.EqFilter
 import simpleorm.core.filter.FetchFilter
 import simpleorm.core.filter.IFilterResolverRepo
 import simpleorm.core.filter.ParameterizableFetchFilter
@@ -11,7 +11,6 @@ import simpleorm.core.pagination.Page
 import simpleorm.core.pagination.Pageable
 import simpleorm.core.pagination.Sort
 import simpleorm.core.schema.naming.INamingStrategy
-import simpleorm.core.schema.naming.SnakeCaseNamingStrategy
 import simpleorm.core.sql.FilteringQuery
 import simpleorm.core.sql.PageableQuery
 import simpleorm.core.sql.Query
@@ -63,7 +62,7 @@ class DefaultRepo<T: Any, ID: Any>(
     override fun findById(id: ID): T? {
         val idProperty = kClass.memberProperties.find { it.name == "id" }
                 ?: error("$kClass must have id property or be described in orm schema to be persistent")
-        val filter = EqKPropertyFilter(idProperty, id)
+        val filter = EqFilter(idProperty, id)
         val sql = FilteringQuery(
                 Query(table, columns),
                 listOf(filterResolverRepo.getResolver(filter::class).toSql(kClass, filter))

@@ -1,6 +1,6 @@
 package simpleorm.core.delegate
 
-import simpleorm.core.filter.EqKPropertyFilter
+import simpleorm.core.filter.EqFilter
 import simpleorm.core.findBy
 import simpleorm.core.schema.property.OneToManyProperty
 import kotlin.reflect.KProperty
@@ -15,7 +15,7 @@ class OneToManyPropertyDelegate<T: Any>(
         return oneToManyProperty.kClass.findBy(
                 oneToManyProperty.kClass,
                 listOf(
-                    EqKPropertyFilter(
+                    EqFilter(
                         oneToManyProperty.foreignKey as KProperty1<T, Any>,
                         id
                     )

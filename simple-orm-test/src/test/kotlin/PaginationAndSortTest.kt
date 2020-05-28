@@ -7,7 +7,7 @@ import paulpaulych.utils.ResourceLoader
 import simpleorm.core.*
 import simpleorm.core.delegate.JdbcDelegateCreator
 import simpleorm.core.filter.HashMapFilterResolverRepo
-import simpleorm.core.filter.LikeKPropertyFilter
+import simpleorm.core.filter.LikeFilter
 import simpleorm.core.jdbc.JdbcTemplate
 import simpleorm.core.jdbc.SingleOperationConnectionHolder
 import simpleorm.core.pagination.PageRequest
@@ -18,8 +18,6 @@ import simpleorm.core.schema.naming.SnakeCaseNamingStrategy
 import simpleorm.core.schema.yaml.ast.YamlSchemaCreator
 import simpleorm.core.sql.SimpleQueryGenerator
 import simpleorm.test.Example
-import simpleorm.test.Person
-import simpleorm.test.WithNullable
 
 class PaginationAndSortTest: FunSpec() {
 
@@ -145,13 +143,13 @@ class PaginationAndSortTest: FunSpec() {
         test("findBy paging"){
             val pageRequest = PageRequest(0, 1, listOf(Sort(Example::longValue, Sort.Order.DESC)))
             val firstPage = Example::class.findBy(
-                    listOf(LikeKPropertyFilter(Example::stringValue, "%i%")),
+                    listOf(LikeFilter(Example::stringValue, "%i%")),
                     pageRequest)
             firstPage.values shouldBe listOf(
                     Example(3, "third")
             )
             val secondPage = Example::class.findBy(
-                    listOf(LikeKPropertyFilter(Example::stringValue, "%i%")),
+                    listOf(LikeFilter(Example::stringValue, "%i%")),
                     pageRequest.next)
             secondPage.values shouldBe listOf(
                     Example(1, "first")

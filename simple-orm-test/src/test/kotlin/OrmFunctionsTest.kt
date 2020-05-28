@@ -6,9 +6,9 @@ import io.kotlintest.specs.FunSpec
 import paulpaulych.utils.ResourceLoader
 import simpleorm.core.*
 import simpleorm.core.delegate.JdbcDelegateCreator
-import simpleorm.core.filter.EqKPropertyFilter
+import simpleorm.core.filter.EqFilter
 import simpleorm.core.filter.HashMapFilterResolverRepo
-import simpleorm.core.filter.LikeKPropertyFilter
+import simpleorm.core.filter.LikeFilter
 import simpleorm.core.jdbc.JdbcTemplate
 import simpleorm.core.jdbc.SingleOperationConnectionHolder
 import simpleorm.core.proxy.CglibDelegateProxyGenerator
@@ -165,21 +165,21 @@ class OrmFunctionsTest : FunSpec(){
 //        }
 
         test("findBy test"){
-            val examples = Example::class.findBy(listOf(EqKPropertyFilter(Example::stringValue, "goodbye")))
+            val examples = Example::class.findBy(listOf(EqFilter(Example::stringValue, "goodbye")))
             examples.first() shouldBe Example(3, "goodbye")
         }
 
         test("findBy many filters"){
             val persons1 = Person::class.findBy(listOf(
-                    EqKPropertyFilter(Person::age, 29),
-                    LikeKPropertyFilter(Person::name, "%2")
+                    EqFilter(Person::age, 29),
+                    LikeFilter(Person::name, "%2")
             ))
 
             persons1 shouldBe listOf()
 
             val persons2 = Person::class.findBy(listOf(
-                    EqKPropertyFilter(Person::age, 31),
-                    LikeKPropertyFilter(Person::name, "%b2")
+                    EqFilter(Person::age, 31),
+                    LikeFilter(Person::name, "%b2")
             ))
 
             persons2.first() shouldBe Person(3, "Bob2", 31)

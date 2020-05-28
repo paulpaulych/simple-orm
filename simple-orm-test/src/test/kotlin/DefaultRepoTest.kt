@@ -1,12 +1,11 @@
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.kotlintest.should
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 import paulpaulych.utils.ResourceLoader
 import simpleorm.core.*
 import simpleorm.core.delegate.JdbcDelegateCreator
-import simpleorm.core.filter.EqKPropertyFilter
+import simpleorm.core.filter.EqFilter
 import simpleorm.core.filter.HashMapFilterResolverRepo
 import simpleorm.core.jdbc.JdbcTemplate
 import simpleorm.core.jdbc.SingleOperationConnectionHolder
@@ -82,7 +81,7 @@ class DefaultRepoTest: FunSpec() {
 
         test("findBy"){
             DefaultExample::class.findBy(
-                    listOf(EqKPropertyFilter(DefaultExample::one_two, "second"))
+                    listOf(EqFilter(DefaultExample::one_two, "second"))
             ) shouldBe listOf(DefaultExample(2, "second"))
         }
 
