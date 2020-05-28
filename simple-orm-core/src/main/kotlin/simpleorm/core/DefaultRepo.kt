@@ -118,6 +118,9 @@ class DefaultRepo<T: Any, ID: Any>(
         val columns = mutableListOf<String>()
         val values = mutableListOf<Any?>()
         kClass.memberProperties.forEach{ kProperty ->
+            if(kProperty == idProperty){
+                return@forEach
+            }
             columns.add(namingStrategy.toColumnName(kProperty.name))
             values.add(kProperty.get(obj))
         }
