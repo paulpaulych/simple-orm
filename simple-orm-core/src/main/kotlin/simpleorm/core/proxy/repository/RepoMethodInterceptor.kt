@@ -6,7 +6,6 @@ import paulpaulych.utils.LoggerDelegate
 import simpleorm.core.ISimpleOrmRepo
 import simpleorm.core.filter.FetchFilter
 import simpleorm.core.filter.IFilterResolverRepo
-import simpleorm.core.filter.ParameterizableFetchFilter
 import simpleorm.core.jdbc.*
 import simpleorm.core.jdbc.get
 import simpleorm.core.pagination.Page
@@ -130,7 +129,7 @@ class RepoMethodInterceptor(
 
     private fun findBy(filters: List<FetchFilter>): List<Any>{
         val stringFilters = filters.map { filter ->
-            filterResolverRepo.getResolver(filter::class).toSql(entityDescriptor.kClass, filter)
+            filterResolverRepo.getResolver(filter::class).toSql(entityDescriptor.kClass, filter, filterResolverRepo)
         }
         val sql = FilteringQuery(
                 Query(
@@ -139,7 +138,7 @@ class RepoMethodInterceptor(
                 ),
                 stringFilters
         ).toString()
-        val filterParams = filters.filterIsInstance(ParameterizableFetchFilter::class.java).map { it.value }
+        val filterParams = filters.flatMap { it.params }
         val ids = jdbc.doInConnection {connection ->
             val rs = connection.prepareStatement(sql)
                     .setValues(filterParams)
@@ -152,7 +151,7 @@ class RepoMethodInterceptor(
     private fun findBy(filters: List<FetchFilter>, pageable: Pageable): Page<Any>{
         val sorts = mapSorts(pageable.sorts)
         val stringFilters = filters.map { filter ->
-            filterResolverRepo.getResolver(filter::class).toSql(entityDescriptor.kClass, filter)
+            filterResolverRepo.getResolver(filter::class).toSql(entityDescriptor.kClass, filter, filterResolverRepo)
         }
         val sql = PageableQuery(
                 FilteringQuery(
@@ -164,7 +163,7 @@ class RepoMethodInterceptor(
                 ),
                 sorts
         ).toString()
-        val filterParams = filters.filterIsInstance(ParameterizableFetchFilter::class.java).map { it.value }
+        val filterParams = filters.flatMap { it.params }
         val ids = jdbc.doInConnection {connection ->
             val rs = connection.prepareStatement(sql)
                     .setValues(filterParams + listOf(pageable.pageSize, pageable.offset))

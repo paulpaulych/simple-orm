@@ -3,7 +3,6 @@ package simpleorm.core
 import simpleorm.core.filter.EqFilter
 import simpleorm.core.filter.FetchFilter
 import simpleorm.core.filter.IFilterResolverRepo
-import simpleorm.core.filter.ParameterizableFetchFilter
 import simpleorm.core.jdbc.JdbcOperations
 import simpleorm.core.jdbc.get
 import simpleorm.core.jdbc.setValues
@@ -65,7 +64,7 @@ class DefaultRepo<T: Any, ID: Any>(
         val filter = EqFilter(idProperty, id)
         val sql = FilteringQuery(
                 Query(table, columns),
-                listOf(filterResolverRepo.getResolver(filter::class).toSql(kClass, filter))
+                listOf(filterResolverRepo.getResolver(filter::class).toSql(kClass, filter, filterResolverRepo))
         ).toString()
         val result = jdbc.doInConnection { connection ->
             val rs = connection.prepareStatement(sql)
@@ -162,9 +161,9 @@ class DefaultRepo<T: Any, ID: Any>(
 
     override fun findBy(filters: List<FetchFilter>): List<T>{
         val stringFilters = filters.map { filter ->
-            filterResolverRepo.getResolver(filter::class).toSql(kClass, filter)
+            filterResolverRepo.getResolver(filter::class).toSql(kClass, filter, filterResolverRepo)
         }
-        val filterParams = filters.filterIsInstance(ParameterizableFetchFilter::class.java).map { it.value }
+        val filterParams = filters.flatMap { it.params }
         val sql = FilteringQuery(
                 Query(table, columns),
                 stringFilters
@@ -180,7 +179,7 @@ class DefaultRepo<T: Any, ID: Any>(
 
     override fun findBy(filters: List<FetchFilter>, pageable: Pageable): Page<T> {
         val stringFilters = filters.map { filter ->
-            filterResolverRepo.getResolver(filter::class).toSql(kClass, filter)
+            filterResolverRepo.getResolver(filter::class).toSql(kClass, filter, filterResolverRepo)
         }
         val sql = PageableQuery(
                 FilteringQuery(
@@ -189,7 +188,7 @@ class DefaultRepo<T: Any, ID: Any>(
                 ),
                 mapSorts(pageable.sorts)
         ).toString()
-        val filterParams = filters.filterIsInstance(ParameterizableFetchFilter::class.java).map { it.value }
+        val filterParams = filters.flatMap { it.params }
         val result = jdbc.doInConnection {connection ->
             val rs = connection.prepareStatement(sql)
                     .setValues(filterParams + listOf(pageable.pageSize, pageable.offset))

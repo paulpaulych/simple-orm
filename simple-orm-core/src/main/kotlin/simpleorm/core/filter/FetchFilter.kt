@@ -2,13 +2,12 @@ package simpleorm.core.filter
 
 import kotlin.reflect.KProperty1
 
-interface FetchFilter
+abstract class FetchFilter(
+        val params: List<Any> = listOf()
+)
 
-interface ParameterizableFetchFilter: FetchFilter{
-    val value: Any
-}
-
-interface KPropertyFilter: FetchFilter{
-    val kProperty: KProperty1<*, *>
-}
+open class KPropertyFilter(
+    val kProperty: KProperty1<*, *>,
+    values: List<Any> = listOf()
+): FetchFilter(values)
 

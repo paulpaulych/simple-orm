@@ -5,10 +5,10 @@ import kotlin.reflect.KClass
 
 class HashMapFilterResolverRepo(
         ormSchema: OrmSchema,
-        resolvers: Map<KClass<FetchFilter>, FilterResolver>? = null
+        resolvers: Map<KClass<*>, FilterResolver>? = null
 ): IFilterResolverRepo {
 
-    private val resolversMap = mutableMapOf<KClass<out FetchFilter>, FilterResolver>(
+    private val resolversMap = mutableMapOf<KClass<*>, FilterResolver>(
             EqFilter::class to EqFilterResolver(ormSchema),
             LikeFilter::class to LikeFilterResolver(ormSchema),
             NonNullFilter::class to NonNullFilterResolver(ormSchema),
