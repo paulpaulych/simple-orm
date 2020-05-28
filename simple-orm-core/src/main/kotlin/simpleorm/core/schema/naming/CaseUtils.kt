@@ -5,7 +5,7 @@ fun toSnakeCase(s: String): String{
         if(!acc.isEmpty() && c.isUpperCase()){
             acc + "_" + c.toLowerCase()
         }else{
-            acc + c.toString()
+            acc + c.toString().toLowerCase()
         }
     }
 }
