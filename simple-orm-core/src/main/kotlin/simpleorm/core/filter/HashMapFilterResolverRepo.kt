@@ -19,7 +19,8 @@ class HashMapFilterResolverRepo(
             LessFilter::class to LessFilterResolver(ormSchema),
             GreaterFilter::class to GreaterFilterResolver(ormSchema),
             LessEqFilter::class to LessEqFilterResolver(ormSchema),
-            GreaterEqFilter::class to GreaterEqFilterResolver(ormSchema)
+            GreaterEqFilter::class to GreaterEqFilterResolver(ormSchema),
+            NotLikeFilter::class to NotLikeFilterResolver(ormSchema)
     )
 
     init {
