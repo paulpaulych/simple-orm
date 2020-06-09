@@ -186,6 +186,10 @@ class OrmFunctionsTest : FunSpec(){
             persons2.first() shouldBe Person(3, "Bob2", 31)
         }
 
+        test("findBy optional filter"){
+            Person::class.findBy(null) shouldBe Person::class.findAll()
+        }
+
     }
 
     data class NotDescribed(

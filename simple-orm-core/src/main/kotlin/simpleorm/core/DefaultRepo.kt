@@ -172,7 +172,10 @@ class DefaultRepo<T: Any, ID: Any>(
         return Page(result)
     }
 
-    override fun findBy(filter: FetchFilter): List<T>{
+    override fun findBy(filter: FetchFilter?): List<T>{
+        if(filter == null){
+            return findAll()
+        }
         val stringFilter = filterResolverRepo.getResolver(filter::class).toSql(kClass, filter, filterResolverRepo)
 
         val filterParams = filter.params
@@ -189,7 +192,10 @@ class DefaultRepo<T: Any, ID: Any>(
 
     }
 
-    override fun findBy(filter: FetchFilter, pageable: Pageable): Page<T> {
+    override fun findBy(filter: FetchFilter?, pageable: Pageable): Page<T> {
+        if(filter == null){
+            return findAll(pageable)
+        }
         val stringFilter = filterResolverRepo.getResolver(filter::class).toSql(kClass, filter, filterResolverRepo)
 
         val sql = PageableQuery(

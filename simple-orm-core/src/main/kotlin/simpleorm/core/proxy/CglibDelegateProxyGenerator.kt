@@ -30,20 +30,24 @@ class CglibDelegateProxyGenerator(
         log.trace("creating proxy for $kClass")
         val interceptor = DelegatedPropertiesInterceptor(
                 kClass,
-                kClass.mutableProperties().map {
-                    it to delegateCreator.create(
-                            entityDescriptor,
-                            entityDescriptor.getPropertyDescriptor(it),
-                            id
-                    )
-                }.toMap(),
-                kClass.immutableProperties().map {
-                    it to delegateCreator.create(
-                            entityDescriptor,
-                            entityDescriptor.getPropertyDescriptor(it),
-                            id
-                    )
-                }.toMap()
+                kClass.mutableProperties()
+                        .filter { isConstructorParameter(it, kClass) }
+                        .map {
+                            it to delegateCreator.create(
+                                    entityDescriptor,
+                                    entityDescriptor.getPropertyDescriptor(it),
+                                    id
+                            )
+                        }.toMap(),
+                kClass.immutableProperties()
+                        .filter { isConstructorParameter(it, kClass) }
+                        .map {
+                            it to delegateCreator.create(
+                                    entityDescriptor,
+                                    entityDescriptor.getPropertyDescriptor(it),
+                                    id
+                            )
+                        }.toMap()
         )
         enhancer.setSuperclass(kClass.java)
 

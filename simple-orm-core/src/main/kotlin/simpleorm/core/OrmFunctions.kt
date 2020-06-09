@@ -35,11 +35,11 @@ inline fun <reified T: Any> KClass<T>.findById(id: Any): T?{
     return findRepo(T::class).findById(id)
 }
 
-inline fun <reified T: Any> KClass<T>.findBy(filter: FetchFilter): List<T>{
+inline fun <reified T: Any> KClass<T>.findBy(filter: FetchFilter?): List<T>{
     return findRepo(T::class).findBy(filter)
 }
 
-inline fun <reified T: Any> KClass<T>.findBy(filter: FetchFilter, pageable: Pageable): Page<T>{
+inline fun <reified T: Any> KClass<T>.findBy(filter: FetchFilter?, pageable: Pageable): Page<T>{
     return findRepo(T::class).findBy(filter, pageable)
 }
 

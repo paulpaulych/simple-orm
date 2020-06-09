@@ -17,6 +17,7 @@ internal fun <T: Any> byColumnGetter(kClass: KClass<T>, resultSet: ResultSet): (
         Byte::class -> { s: String -> resultSet.getByte(s) as T}
         Date::class -> { s: String -> resultSet.getTimestamp(s) as T}
         BigDecimal::class -> {s: String -> resultSet.getBigDecimal(s) as T}
+        Boolean::class -> {s: String -> resultSet.getBoolean(s) as T}
         else -> throw IllegalArgumentException("cannot find extract method for type: $kClass")
     }
 }
@@ -33,6 +34,7 @@ internal fun <T: Any> byIndexGetter(kClass: KClass<T>, resultSet: ResultSet): (I
         Byte::class -> { s: Int -> resultSet.getByte(s) as T}
         BigDecimal::class -> {s: Int -> resultSet.getBigDecimal(s) as T}
         Date::class -> { s: Int -> resultSet.getTimestamp(s) as T}
+        Boolean::class -> {s: Int -> resultSet.getBoolean(s) as T}
         else -> throw IllegalArgumentException("cannot find extract method for type: $kClass")
     }
 }

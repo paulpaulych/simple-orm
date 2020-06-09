@@ -63,10 +63,10 @@ class RepoMethodInterceptor(
             return query(args[0] as String, args[1] as List<Any>)
         }
         if(method.name == "findBy" && method.parameterCount == 1){
-            return findBy(args.first() as FetchFilter)
+            return findBy(args.first() as FetchFilter?)
         }
         if(method.name == "findBy" && method.parameterCount == 2){
-            return findBy(args.first() as FetchFilter, args[1] as Pageable)
+            return findBy(args.first() as FetchFilter?, args[1] as Pageable)
         }
         error("unsupported operation: ${method.name}")
     }
@@ -127,7 +127,10 @@ class RepoMethodInterceptor(
         return Page(ids.map { proxyGenerator.createProxyClass(entityDescriptor.kClass, it) })
     }
 
-    private fun findBy(filter: FetchFilter): List<Any>{
+    private fun findBy(filter: FetchFilter?): List<Any>{
+        if(filter == null){
+            return findAll()
+        }
         val stringFilter = filterResolverRepo.getResolver(filter::class).toSql(entityDescriptor.kClass, filter, filterResolverRepo)
 
         val sql = FilteringQuery(
@@ -147,7 +150,10 @@ class RepoMethodInterceptor(
         return ids.map{ proxyGenerator.createProxyClass(entityDescriptor.kClass, it) }
     }
 
-    private fun findBy(filter: FetchFilter, pageable: Pageable): Page<Any>{
+    private fun findBy(filter: FetchFilter?, pageable: Pageable): Page<Any>{
+        if(filter == null){
+            return findAll(pageable)
+        }
         val sorts = mapSorts(pageable.sorts)
         val stringFilter = filterResolverRepo.getResolver(filter::class).toSql(entityDescriptor.kClass, filter, filterResolverRepo)
 
@@ -292,6 +298,8 @@ class RepoMethodInterceptor(
                 }
 
         val sql = queryGenerationStrategy.insert(entityDescriptor.table, columns)
+
+        log.trace("sql: $sql")
 
         val idKClass = entityDescriptor.idProperty.kProperty.returnType.classifier as KClass<*>
         val id = jdbc.doInConnection{
