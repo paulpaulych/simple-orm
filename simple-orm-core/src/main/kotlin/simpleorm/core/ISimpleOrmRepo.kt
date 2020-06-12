@@ -11,7 +11,8 @@ interface ISimpleOrmRepo<T: Any, ID: Any>{
     fun findAll(pageable: Pageable): Page<T>
     fun findBy(filter: FetchFilter?): List<T>
     fun findBy(filter: FetchFilter?, pageable: Pageable): Page<T>
-    fun save(obj: T): T
+    fun persist(obj: T): T
+    fun batchInsert(objs: List<T>): List<T>
     fun delete(id: ID)
     fun query(sql: String, args: List<Any>): List<T>
 }

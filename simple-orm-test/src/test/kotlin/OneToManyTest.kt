@@ -7,19 +7,14 @@ import simpleorm.core.*
 import simpleorm.core.delegate.JdbcDelegateCreator
 import simpleorm.core.filter.HashMapFilterResolverRepo
 import simpleorm.core.jdbc.JdbcTemplate
-import simpleorm.core.jdbc.ResultSetExtractor
 import simpleorm.core.jdbc.SingleOperationConnectionHolder
 import simpleorm.core.proxy.CglibDelegateProxyGenerator
 import simpleorm.core.proxy.repository.CglibRepoProxyGenerator
 import simpleorm.core.schema.naming.SnakeCaseNamingStrategy
 import simpleorm.core.schema.yaml.ast.YamlSchemaCreator
 import simpleorm.core.sql.SimpleQueryGenerator
-import simpleorm.test.Example
-import simpleorm.test.Person
-import simpleorm.test.WithNullable
 import simpleorm.test.manytoone.Owner
 import simpleorm.test.manytoone.Product
-import java.sql.ResultSet
 
 class OneToManyTest: FunSpec() {
 
@@ -126,11 +121,11 @@ class OneToManyTest: FunSpec() {
 
         test("save new"){
             val owner = Owner(null,"OWNER_3", listOf())
-            save(owner) shouldBe Owner(3, "OWNER_3", listOf())
+            persist(owner) shouldBe Owner(3, "OWNER_3", listOf())
 
             val product = Product(null, "PRODUCT_3", 3)
 
-            save(product) shouldBe Product(3, "PRODUCT_3", 3)
+            persist(product) shouldBe Product(3, "PRODUCT_3", 3)
 
             Owner::class.findById(3L) shouldBe Owner(3, "OWNER_3", listOf(
                     Product(3, "PRODUCT_3", 3)
@@ -150,8 +145,8 @@ class OneToManyTest: FunSpec() {
                     listOf()
             )
 
-            save(newOwner).id?.let {id->
-                oldOwner.products.map {it.copy(ownerId = id)}.forEach{ save(it) }
+            persist(newOwner).id?.let { id->
+                oldOwner.products.map {it.copy(ownerId = id)}.forEach{ persist(it) }
             }
             Owner(
                     4,

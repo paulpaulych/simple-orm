@@ -126,29 +126,29 @@ class OrmFunctionsTest : FunSpec(){
 
 
         test("save new"){
-            val example = save(Example(null, "hello"))
+            val example = persist(Example(null, "hello"))
             example shouldBe Example(3, "hello")
         }
 
         test("save existing"){
-            val example = save(Example(3, "goodbye"))
+            val example = persist(Example(3, "goodbye"))
             example shouldBe Example(3, "goodbye")
         }
 
         test("save existing with nullables"){
-            val withNullable = save(WithNullable())
+            val withNullable = persist(WithNullable())
             withNullable shouldBe WithNullable(1, null)
         }
 
         test("multiple properties"){
-            val person = save(Person(null, "Karl", 18))
+            val person = persist(Person(null, "Karl", 18))
             person shouldBe Person(1, "Karl", 18)
         }
 
         test("custom query"){
-            save(Person(null, "Bob", 29))
+            persist(Person(null, "Bob", 29))
 
-            save(Person(null, "Bob2", 31))
+            persist(Person(null, "Bob2", 31))
 
             val result = Person::class.query("select id, name from person where age > 30")
             result shouldBe listOf(Person(3, "Bob2", 31))

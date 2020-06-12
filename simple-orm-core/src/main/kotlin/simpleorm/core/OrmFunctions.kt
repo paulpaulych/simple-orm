@@ -55,12 +55,16 @@ inline fun <reified T: Any> KClass<T>.findAll(pageable: Pageable): Page<T> {
     return findRepo(T::class).findAll(pageable)
 }
 
-inline fun <reified T: Any> save(value: T): T{
-    return findRepo(T::class).save(value)
+inline fun <reified T: Any> persist(value: T): T{
+    return findRepo(T::class).persist(value)
 }
 
-fun <T: Any> save(kClass: KClass<T>, value: T): T{
-    return findRepo(kClass).save(value)
+inline fun <reified T: Any> batchInsert(objs: List<T>): List<T>{
+    return findRepo(T::class).batchInsert(objs)
+}
+
+fun <T: Any> persist(kClass: KClass<T>, value: T): T{
+    return findRepo(kClass).persist(value)
 }
 
 inline fun <reified T: Any, reified ID: Any> KClass<T>.delete(id: ID){

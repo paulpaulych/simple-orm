@@ -26,7 +26,7 @@ import java.lang.reflect.Method
 import java.sql.PreparedStatement
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.javaMethod
-import simpleorm.core.save as saveGlobal
+import simpleorm.core.persist as saveGlobal
 
 /**
  * Cglib Interceptor for [ISimpleOrmRepo]
@@ -56,8 +56,11 @@ class RepoMethodInterceptor(
         if(method == ISimpleOrmRepo::class.methodByName("delete").javaMethod){
             return delete(args.first())
         }
-        if(method == ISimpleOrmRepo::class.methodByName("save").javaMethod){
-            return save(args.first())
+        if(method == ISimpleOrmRepo::class.methodByName("persist").javaMethod){
+            return persist(args.first())
+        }
+        if(method == ISimpleOrmRepo::class.methodByName("batchInsert").javaMethod){
+            return persist(args.first())
         }
         if(method == ISimpleOrmRepo::class.methodByName("query").javaMethod){
             return query(args[0] as String, args[1] as List<Any>)
@@ -344,13 +347,17 @@ class RepoMethodInterceptor(
         return findById(id)!!
     }
 
-    private fun save(obj: Any): Any {
+    private fun persist(obj: Any): Any {
         log.trace("save called for $obj")
 
         val oldId = entityDescriptor.idProperty.kProperty.get(obj)
                 ?: return insert(obj)
         return update(oldId, obj)
 
+    }
+
+    private fun batchInsert(objs: List<Any>): List<Any>{
+        TODO("not implemented yet")
     }
 
     private fun delete(id: Any) {

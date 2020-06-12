@@ -21,3 +21,4 @@ where $conditions""".trimIndent()
     }
 
 }
+

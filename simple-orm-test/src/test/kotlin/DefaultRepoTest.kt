@@ -64,7 +64,7 @@ class DefaultRepoTest: FunSpec() {
         jdbc.execute("create table default_example(id bigint primary key auto_increment, one_two text)")
 
         test("insert"){
-            save(DefaultExample(null, "first"))
+            persist(DefaultExample(null, "first"))
         }
 
         test("findById"){
@@ -72,7 +72,7 @@ class DefaultRepoTest: FunSpec() {
         }
 
         test("findAll"){
-            save(DefaultExample(null, "second"))
+            persist(DefaultExample(null, "second"))
             DefaultExample::class.findAll() shouldBe listOf(
                     DefaultExample(1, "first"),
                     DefaultExample(2, "second")
@@ -87,7 +87,7 @@ class DefaultRepoTest: FunSpec() {
 
 
         test("findAll pageable"){
-            save(DefaultExample(null, "third"))
+            persist(DefaultExample(null, "third"))
 
             val pr1 = PageRequest(0, 1,
                     listOf(Sort(DefaultExample::id, Sort.Order.DESC)))
@@ -101,6 +101,17 @@ class DefaultRepoTest: FunSpec() {
             DefaultExample::class.findAll() shouldBe listOf(
                     DefaultExample(2, "second"),
                     DefaultExample(3, "third")
+            )
+        }
+
+        test("batchInsert"){
+            val objs = listOf(
+                    DefaultExample(one_two = "batch_first"),
+                    DefaultExample(one_two = "batch_second")
+            )
+            batchInsert(objs) shouldBe listOf(
+                    DefaultExample(4, "batch_first"),
+                    DefaultExample(5, "batch_second")
             )
         }
 

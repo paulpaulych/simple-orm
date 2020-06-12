@@ -1,5 +1,6 @@
 package simpleorm.core
 
+import paulpaulych.utils.LoggerDelegate
 import simpleorm.core.filter.EqFilter
 import simpleorm.core.filter.FetchFilter
 import simpleorm.core.filter.IFilterResolverRepo
@@ -10,10 +11,7 @@ import simpleorm.core.pagination.Page
 import simpleorm.core.pagination.Pageable
 import simpleorm.core.pagination.Sort
 import simpleorm.core.schema.naming.INamingStrategy
-import simpleorm.core.sql.FilteringQuery
-import simpleorm.core.sql.PageableQuery
-import simpleorm.core.sql.Query
-import simpleorm.core.sql.QueryGenerationStrategy
+import simpleorm.core.sql.*
 import simpleorm.core.sql.condition.EqualsCondition
 import java.sql.PreparedStatement
 import kotlin.reflect.KClass
@@ -36,6 +34,8 @@ class DefaultRepo<T: Any, ID: Any>(
     private val table: String
     private val columns: List<String>
     private val idProperty: KProperty1<T, *>
+
+    private val log by LoggerDelegate()
 
     init {
         if(!kClass.isData){
@@ -66,6 +66,7 @@ class DefaultRepo<T: Any, ID: Any>(
                 Query(table, columns),
                 listOf(filterResolverRepo.getResolver(filter::class).toSql(kClass, filter, filterResolverRepo))
         ).toString()
+        log.info("sql: $sql")
         val result = jdbc.doInConnection { connection ->
             val rs = connection.prepareStatement(sql)
                     .setValues(listOf(id))
@@ -76,19 +77,60 @@ class DefaultRepo<T: Any, ID: Any>(
     }
 
     override fun findAll(): List<T> {
+        val sql = Query(table, columns).toString()
+        log.info("sql: $sql")
         return jdbc.queryForList(
-                Query(table, columns).toString(),
+                sql,
                 rse::extract
         )
     }
 
-    override fun save(obj: T): T {
+    override fun persist(obj: T): T {
         val id = idProperty.get(obj)
         if(id != null){
             return update(obj, id as ID)
         }
         return insert(obj)
     }
+
+    override fun batchInsert(objs: List<T>): List<T> {
+        if(objs.isEmpty()){
+            return listOf()
+        }
+
+        val columns = mutableListOf<String>()
+        val values = Array<MutableList<Any?>>(objs.size) {
+            mutableListOf()
+        }.toList()
+        kClass.declaredMemberProperties.forEach{ kProperty ->
+            columns.add(namingStrategy.toColumnName(kProperty.name))
+            objs.mapIndexed{ index, obj ->
+                values[index].add(kProperty.get(obj))
+            }
+        }
+        val sql = InsertStatement(table, columns, values).toString()
+        log.info("sql: $sql")
+        val ids = jdbc.doInConnection{ conn ->
+            val ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)
+                    .setValues(values.flatten())
+            ps.executeUpdate()
+            val keys = ps.generatedKeys
+
+            val ids = mutableListOf<Long>()
+            while (keys.next()){
+                ids.add(keys.get(1, Long::class)
+                        ?: error("generated key is null"))
+            }
+            ids
+        }
+
+        return ids.map{
+            findById(it as ID)
+                    ?: error("value was not inserted?? please report to maintainers")
+        }
+
+    }
+
 
     private fun insert(obj: T): T{
         val columns = mutableListOf<String>()
@@ -102,6 +144,7 @@ class DefaultRepo<T: Any, ID: Any>(
         }
         val sql = queryGenerationStrategy.insert(table, columns)
 
+        log.info("sql: $sql")
         val id = jdbc.doInConnection{
             val ps = it.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)
                     .setValues(values)
@@ -129,6 +172,7 @@ class DefaultRepo<T: Any, ID: Any>(
         val idColumn = namingStrategy.toColumnName(idProperty.name)
         val sql = queryGenerationStrategy.update(table, columns, listOf(EqualsCondition(idColumn, id)))
 
+        log.info("sql: $sql")
         jdbc.doInConnection{
             jdbc.doInConnection{ connection->
                 connection.prepareStatement(sql)
@@ -144,10 +188,12 @@ class DefaultRepo<T: Any, ID: Any>(
     override fun delete(id: ID) {
         val idColumn = namingStrategy.toColumnName(idProperty.name)
         val sql = queryGenerationStrategy.delete(table, listOf(EqualsCondition(idColumn, id)))
+        log.info("sql: $sql")
         jdbc.execute(sql)
     }
 
     override fun query(sql: String, args: List<Any>): List<T> {
+        log.info("sql: $sql")
         return jdbc.doInConnection {
             val ps = it.prepareStatement(sql)
             val rs = ps.setValues(args).executeQuery()
@@ -163,6 +209,7 @@ class DefaultRepo<T: Any, ID: Any>(
                 ),
                 mapSorts(pageable.sorts)
         ).toString()
+        log.info("sql: $sql")
         val result = jdbc.doInConnection {connection ->
             val rs = connection.prepareStatement(sql)
                     .setValues(listOf(pageable.pageSize, pageable.offset))
@@ -183,6 +230,7 @@ class DefaultRepo<T: Any, ID: Any>(
                 Query(table, columns),
                 listOf(stringFilter)
         ).toString()
+        log.info("sql: $sql")
         return jdbc.doInConnection {connection ->
             val rs = connection.prepareStatement(sql)
                     .setValues(filterParams)
@@ -205,6 +253,7 @@ class DefaultRepo<T: Any, ID: Any>(
                 ),
                 mapSorts(pageable.sorts)
         ).toString()
+        log.info("sql: $sql")
         val filterParams = filter.params
         val result = jdbc.doInConnection {connection ->
             val rs = connection.prepareStatement(sql)
