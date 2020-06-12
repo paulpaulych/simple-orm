@@ -97,12 +97,21 @@ class DefaultRepo<T: Any, ID: Any>(
         if(objs.isEmpty()){
             return listOf()
         }
+        objs.forEach{
+            val id = idProperty.get(it)
+            if(id != null){
+                error("id cannot be set for batch insert")
+            }
+        }
 
         val columns = mutableListOf<String>()
         val values = Array<MutableList<Any?>>(objs.size) {
             mutableListOf()
         }.toList()
         kClass.declaredMemberProperties.forEach{ kProperty ->
+            if(kProperty == idProperty){
+                return@forEach
+            }
             columns.add(namingStrategy.toColumnName(kProperty.name))
             objs.mapIndexed{ index, obj ->
                 values[index].add(kProperty.get(obj))
