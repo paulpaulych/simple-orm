@@ -17,7 +17,7 @@ class GreaterFilterResolver(
     override fun toSql(fetchedType: KClass<*>, filter: FetchFilter, filterResolverRepo: IFilterResolverRepo): String {
         filter as GreaterFilter
         val column = getColumn(fetchedType, filter.kProperty)
-        return "$column < ?"
+        return "$column > ?"
     }
 
 }
