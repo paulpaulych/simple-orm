@@ -1,5 +1,5 @@
 entities:
-  simpleorm.test.ExampleEntity:
+  simpleorm.test.Example:
     table: example
     fields:
       longValue:
@@ -7,3 +7,21 @@ entities:
         column: long_value
       stringValue:
         column: string_value
+  simpleorm.test.Person:
+    table: person
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name
+      age:
+        column: AGE
+  simpleorm.test.WithNullable:
+    table: with_nullable
+    fields:
+      id:
+        isId: true
+        column: id
+      opt:
+        column: opt

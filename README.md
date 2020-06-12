@@ -1,10 +1,33 @@
 # simple-orm
-
-Lightweight runtime Kotlin ORM framework without code generation
+Lightweight Kotlin ORM framework
 
 ## usage
 
-Firstly you need schema.yml file decribing your ORM model
+If you want to persist some data classes like these:
+
+```kotlin
+import paulpaulych.utils.Open
+
+@Open
+data class Owner(
+    val id: Long? = null,
+    val name: String,
+    val products: List<Product> = listOf()
+)
+
+@Open
+data class Product(
+    val id: Long? = null,
+    val name: String,
+    val ownerId: Long
+)
+```
+
+..firstly you should mark your classes with @Open and say to kotlin-allopen-plugin make these classes open
+(new gradle plugin may be written soon for this goal)
+
+Then, schema.yml file is required to describe your ORM model:
+
 ```yml
 entities:
 
@@ -37,22 +60,18 @@ Library provides a few generic extension functions like:
 
 ```kotlin
 
-inline fun <reified T: Any> KClass<T>.getAll(): Collection<T>
+inline fun <reified T: Any> KClass<T>.findAll(): Collection<T>
 
-inline fun <reified T: Any> KClass<T>.getByIdLazy(id: Any): T?
+inline fun <reified T: Any> KClass<T>.findById(id: Any): T?
 
-inline fun <reified T: Any> KClass<T>.getById(id: Any): T?
-
-inline fun <reified T: Any> KClass<T>.loadExtra(obj: T): T?
-
-inline fun <reified T: Any> KClass<T>.getByParam(params: Map<KProperty1<T,*>, Any?>): Collection<T>
+inline fun <reified T: Any> KClass<T>.delete(id: Any)
 
 inline fun <reified T: Any> save(obj: T)
 
-inline fun <reified T: Any> saveAll(values: Collection<T>)
+inline fun <reified T: Any> KClass<T>.findBy(spec: Map<KProperty1<T, Any>, Any>): List<T>
 
 ```
 
 which work in accordance with your orm schema.
 
-You could look up `simple-orm-test' module to see final use case of framework. Dont't forget initiaize OrmContext!
+Property values are loaded lazy. Every time you're calling getter

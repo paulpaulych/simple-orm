@@ -2,6 +2,7 @@ package paulpaulych.utils
 
 import java.io.BufferedReader
 import java.io.File
+import java.io.InputStream
 import java.io.InputStreamReader
 
 class ResourceLoader {
@@ -9,13 +10,16 @@ class ResourceLoader {
     companion object{
 
         fun loadText(fname: String): String{
-            val fis = javaClass.classLoader.getResourceAsStream(fname)
-            return BufferedReader(InputStreamReader(fis)).readText()
+            return BufferedReader(InputStreamReader(fis(fname))).readText()
         }
 
         fun loadLines(fname: String): List<String> {
-            val fis = javaClass.classLoader.getResourceAsStream(fname)
-            return BufferedReader(InputStreamReader(fis)).readLines()
+            return BufferedReader(InputStreamReader(fis(fname))).readLines()
+        }
+
+        private fun fis(fname: String): InputStream {
+            return javaClass.classLoader.getResourceAsStream(fname)
+                    ?:error("resource '$fname' not found")
         }
 
     }

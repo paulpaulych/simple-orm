@@ -1,0 +1,26 @@
+entities:
+
+  Book:
+    table: book
+    fields:
+      id:
+        isId: true
+        column: id
+      colors:
+        manyToMany:
+          className: Color
+          rightKeyField: id
+          linkTable: book_color
+          leftColumn: book_id
+          rightColumn: color_id
+      name:
+        column: name
+
+  Color:
+    table: color
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name
