@@ -1,4 +1,4 @@
-# simple-orm
+# SimpleOrm
 Lightweight Kotlin/JVM ORM library
 
 ## Warning
