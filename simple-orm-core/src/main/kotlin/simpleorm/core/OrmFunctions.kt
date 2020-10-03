@@ -35,12 +35,12 @@ inline fun <reified T: Any> KClass<T>.findById(id: Any): T?{
     return findRepo(T::class).findById(id)
 }
 
-inline fun <reified T: Any> KClass<T>.findBy(filters: List<FetchFilter>): List<T>{
-    return findRepo(T::class).findBy(filters)
+inline fun <reified T: Any> KClass<T>.findBy(filter: FetchFilter?): List<T>{
+    return findRepo(T::class).findBy(filter)
 }
 
-inline fun <reified T: Any> KClass<T>.findBy(filters: List<FetchFilter>, pageable: Pageable): Page<T>{
-    return findRepo(T::class).findBy(filters, pageable)
+inline fun <reified T: Any> KClass<T>.findBy(filter: FetchFilter?, pageable: Pageable): Page<T>{
+    return findRepo(T::class).findBy(filter, pageable)
 }
 
 inline fun <reified T: Any> KClass<T>.query(sql: String, params: List<Any> = listOf()): List<T>{
@@ -55,21 +55,20 @@ inline fun <reified T: Any> KClass<T>.findAll(pageable: Pageable): Page<T> {
     return findRepo(T::class).findAll(pageable)
 }
 
-inline fun <reified T: Any> save(value: T): T{
-    return findRepo(T::class).save(value)
+inline fun <reified T: Any> persist(value: T): T{
+    return findRepo(T::class).persist(value)
 }
 
-fun <T: Any> save(kClass: KClass<T>, value: T): T{
-    return findRepo(kClass).save(value)
+inline fun <reified T: Any> batchInsert(objs: List<T>): List<T>{
+    return findRepo(T::class).batchInsert(objs)
+}
+
+fun <T: Any> persist(kClass: KClass<T>, value: T): T{
+    return findRepo(kClass).persist(value)
 }
 
 inline fun <reified T: Any, reified ID: Any> KClass<T>.delete(id: ID){
     return findRepo(T::class).delete(id)
-}
-
-
-internal fun <T: Any> KClass<T>.findBy(kClass: KClass<T>, filters: List<FetchFilter>): List<T>{
-    return findRepo(kClass).findBy(filters)
 }
 
 fun <T: Any> findRepo(kClass: KClass<T>): ISimpleOrmRepo<T, Any> {

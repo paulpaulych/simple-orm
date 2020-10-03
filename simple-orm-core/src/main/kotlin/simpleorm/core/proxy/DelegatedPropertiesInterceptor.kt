@@ -11,6 +11,7 @@ import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.javaMethod
 
 /**
@@ -27,9 +28,11 @@ class DelegatedPropertiesInterceptor<T: Any>(
     private val log by LoggerDelegate()
 
     private val propByOriginalGetters = kClass.declaredMemberProperties
+            .filter { isConstructorParameter(it, kClass) }
             .associateBy { it.getter.javaMethod }
 
     private val propByOriginalSetters = kClass.declaredMemberProperties
+            .filter { isConstructorParameter(it, kClass) }
             .filterIsInstance<KMutableProperty1<T, *>>()
             .associateBy { it.setter.javaMethod }
     
@@ -59,4 +62,10 @@ class DelegatedPropertiesInterceptor<T: Any>(
         error("delegate not found")
     }
 
+}
+
+fun isConstructorParameter(kProperty1: KProperty1<*, *>, kClass: KClass<*>): Boolean{
+    val primaryConstructor =  kClass.primaryConstructor
+            ?: error("$kClass has no primary contructor")
+    return primaryConstructor.parameters.find{ it.name == kProperty1.name } != null
 }

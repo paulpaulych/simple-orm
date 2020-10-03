@@ -4,16 +4,16 @@ import simpleorm.core.schema.OrmSchema
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-class IsNullKPropertyFilter(
-        override val kProperty: KProperty1<*, *>
-): KPropertyFilter
+class IsNullFilter(
+        kProperty: KProperty1<*, *>
+): KPropertyFilter(kProperty)
 
-class IsNullKPropertyFilterResolver(
+class IsNullFilterResolver(
         ormSchema: OrmSchema
 ): KPropertyFilterResolver(ormSchema){
 
-    override fun toSql(fetchedType: KClass<*>, filter: FetchFilter): String {
-        filter as IsNullKPropertyFilter
+    override fun toSql(fetchedType: KClass<*>, filter: FetchFilter, filterResolverRepo: IFilterResolverRepo): String {
+        filter as IsNullFilter
         val column = getColumn(fetchedType, filter.kProperty)
         return "$column is NULL"
     }

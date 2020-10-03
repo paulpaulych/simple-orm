@@ -5,14 +5,22 @@ import kotlin.reflect.KClass
 
 class HashMapFilterResolverRepo(
         ormSchema: OrmSchema,
-        resolvers: Map<KClass<FetchFilter>, FilterResolver>? = null
+        resolvers: Map<KClass<*>, FilterResolver>? = null
 ): IFilterResolverRepo {
 
-    private val resolversMap = mutableMapOf<KClass<out FetchFilter>, FilterResolver>(
-            EqKPropertyFilter::class to EqKPropertyFilterResolver(ormSchema),
-            LikeKPropertyFilter::class to LikeKPropertyFilterResolver(ormSchema),
-            NonNullKPropertyFilter::class to NonNullKPropertyFilterResolver(ormSchema),
-            IsNullKPropertyFilter::class to IsNullKPropertyFilterResolver(ormSchema)
+    private val resolversMap = mutableMapOf<KClass<*>, FilterResolver>(
+            EqFilter::class to EqFilterResolver(ormSchema),
+            LikeFilter::class to LikeFilterResolver(ormSchema),
+            NonNullFilter::class to NonNullFilterResolver(ormSchema),
+            IsNullFilter::class to IsNullFilterResolver(ormSchema),
+            AndFilter::class to AndFilterResolver(),
+            OrFilter::class to OrFilterResolver(),
+            NotEqFilter::class to NotEqFilterResolver(ormSchema),
+            LessFilter::class to LessFilterResolver(ormSchema),
+            GreaterFilter::class to GreaterFilterResolver(ormSchema),
+            LessEqFilter::class to LessEqFilterResolver(ormSchema),
+            GreaterEqFilter::class to GreaterEqFilterResolver(ormSchema),
+            NotLikeFilter::class to NotLikeFilterResolver(ormSchema)
     )
 
     init {

@@ -18,8 +18,6 @@ import simpleorm.core.transaction.TransactionManagerHolder
 import simpleorm.core.transaction.TxSupportedConnectionHolder
 import simpleorm.core.transaction.inTransaction
 import simpleorm.test.Person
-import simpleorm.test.manytoone.Owner
-import simpleorm.test.manytoone.Product
 import java.lang.RuntimeException
 import kotlin.concurrent.thread
 
@@ -78,7 +76,7 @@ class TransactionTest : FunSpec(){
         test("tx commit"){
 
             inTransaction {
-                save(Person(null, "Person", 21))
+                persist(Person(null, "Person", 21))
             }
 
             Person::class.findById(1L) shouldBe Person(1, "Person", 21)
@@ -91,7 +89,7 @@ class TransactionTest : FunSpec(){
 
                     firstRead shouldBe Person(1, "Person", 21)
 
-                    save(firstRead!!.copy(age = 23))
+                    persist(firstRead!!.copy(age = 23))
                     throw RuntimeException("errorerrorerrorerror")
                 }
             }catch (e: Throwable){
@@ -118,7 +116,7 @@ class TransactionTest : FunSpec(){
             }
             delay(600)
             inTransaction {
-                val saved = save(Person(null, "Person5", 21))
+                val saved = persist(Person(null, "Person5", 21))
                 saved shouldBe Person(2, "Person5", 21)
 
                 synchronized(lock){
@@ -153,7 +151,7 @@ class TransactionTest : FunSpec(){
             delay(600)
             inTransaction {
                 println("creating")
-                val saved = save(Person(null, "Person6", 21))
+                val saved = persist(Person(null, "Person6", 21))
                 saved shouldBe Person(3, "Person6", 21)
 
                 synchronized(lock){
@@ -163,7 +161,7 @@ class TransactionTest : FunSpec(){
                 }
 
                 println("changing")
-                save(Person(3, "Person6", 23))
+                persist(Person(3, "Person6", 23))
             }
 
             //Todo: нормально синхронизовать потоки

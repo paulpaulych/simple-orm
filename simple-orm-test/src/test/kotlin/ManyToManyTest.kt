@@ -14,8 +14,6 @@ import simpleorm.core.proxy.repository.CglibRepoProxyGenerator
 import simpleorm.core.schema.naming.SnakeCaseNamingStrategy
 import simpleorm.core.schema.yaml.ast.YamlSchemaCreator
 import simpleorm.core.sql.SimpleQueryGenerator
-import simpleorm.test.manytoone.Owner
-import simpleorm.test.manytoone.Product
 
 @Open
 data class Book(
@@ -116,7 +114,7 @@ class ManyToManyTest : FunSpec(){
                     ?: error("not found")
             val book1 = Book::class.findById(1L)
                     ?: error("not found")
-            val saved = save(book1.copy(colors = book1.colors + color1))
+            val saved = persist(book1.copy(colors = book1.colors + color1))
             jdbc.queryForList("select color_id from book_color where book_id = 1"){
                 val res = mutableListOf<Long>()
                 while(it.next()){
@@ -135,7 +133,7 @@ class ManyToManyTest : FunSpec(){
         test("delete one right"){
             val book1 = Book::class.findById(1L)
                     ?: error("not found")
-            val saved = save(book1.copy(colors = book1.colors.filter{ it.id == 1L }))
+            val saved = persist(book1.copy(colors = book1.colors.filter{ it.id == 1L }))
             saved shouldBe Book(1, "BOOK_1",
                     listOf(
                             Color(1L, "COLOR_1")

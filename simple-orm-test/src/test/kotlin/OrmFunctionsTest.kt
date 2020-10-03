@@ -6,9 +6,10 @@ import io.kotlintest.specs.FunSpec
 import paulpaulych.utils.ResourceLoader
 import simpleorm.core.*
 import simpleorm.core.delegate.JdbcDelegateCreator
-import simpleorm.core.filter.EqKPropertyFilter
+import simpleorm.core.filter.AndFilter
+import simpleorm.core.filter.EqFilter
 import simpleorm.core.filter.HashMapFilterResolverRepo
-import simpleorm.core.filter.LikeKPropertyFilter
+import simpleorm.core.filter.LikeFilter
 import simpleorm.core.jdbc.JdbcTemplate
 import simpleorm.core.jdbc.SingleOperationConnectionHolder
 import simpleorm.core.proxy.CglibDelegateProxyGenerator
@@ -125,29 +126,29 @@ class OrmFunctionsTest : FunSpec(){
 
 
         test("save new"){
-            val example = save(Example(null, "hello"))
+            val example = persist(Example(null, "hello"))
             example shouldBe Example(3, "hello")
         }
 
         test("save existing"){
-            val example = save(Example(3, "goodbye"))
+            val example = persist(Example(3, "goodbye"))
             example shouldBe Example(3, "goodbye")
         }
 
         test("save existing with nullables"){
-            val withNullable = save(WithNullable())
+            val withNullable = persist(WithNullable())
             withNullable shouldBe WithNullable(1, null)
         }
 
         test("multiple properties"){
-            val person = save(Person(null, "Karl", 18))
+            val person = persist(Person(null, "Karl", 18))
             person shouldBe Person(1, "Karl", 18)
         }
 
         test("custom query"){
-            save(Person(null, "Bob", 29))
+            persist(Person(null, "Bob", 29))
 
-            save(Person(null, "Bob2", 31))
+            persist(Person(null, "Bob2", 31))
 
             val result = Person::class.query("select id, name from person where age > 30")
             result shouldBe listOf(Person(3, "Bob2", 31))
@@ -165,24 +166,28 @@ class OrmFunctionsTest : FunSpec(){
 //        }
 
         test("findBy test"){
-            val examples = Example::class.findBy(listOf(EqKPropertyFilter(Example::stringValue, "goodbye")))
+            val examples = Example::class.findBy(EqFilter(Example::stringValue, "goodbye"))
             examples.first() shouldBe Example(3, "goodbye")
         }
 
         test("findBy many filters"){
-            val persons1 = Person::class.findBy(listOf(
-                    EqKPropertyFilter(Person::age, 29),
-                    LikeKPropertyFilter(Person::name, "%2")
+            val persons1 = Person::class.findBy(AndFilter(
+                    EqFilter(Person::age, 29),
+                    LikeFilter(Person::name, "%2")
             ))
 
             persons1 shouldBe listOf()
 
-            val persons2 = Person::class.findBy(listOf(
-                    EqKPropertyFilter(Person::age, 31),
-                    LikeKPropertyFilter(Person::name, "%b2")
+            val persons2 = Person::class.findBy(AndFilter(
+                    EqFilter(Person::age, 31),
+                    LikeFilter(Person::name, "%b2")
             ))
 
             persons2.first() shouldBe Person(3, "Bob2", 31)
+        }
+
+        test("findBy optional filter"){
+            Person::class.findBy(null) shouldBe Person::class.findAll()
         }
 
     }
