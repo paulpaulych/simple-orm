@@ -27,6 +27,7 @@ class CglibRepoProxyGenerator(
                 proxyGenerator,
                 filterResolverRepo
         ))
+        @Suppress("UNCHECKED_CAST")
         return enhancer.create() as ISimpleOrmRepo<T, *>
     }
 

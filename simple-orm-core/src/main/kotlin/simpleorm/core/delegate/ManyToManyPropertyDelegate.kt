@@ -2,7 +2,6 @@ package simpleorm.core.delegate
 
 import paulpaulych.utils.LoggerDelegate
 import simpleorm.core.filter.EqFilter
-import simpleorm.core.findBy
 import simpleorm.core.jdbc.JdbcOperations
 import simpleorm.core.jdbc.get
 import simpleorm.core.schema.property.ManyToManyProperty
@@ -39,7 +38,7 @@ class ManyToManyPropertyDelegate<T: Any>(
         return ids.fold(mutableListOf()){ acc, id->
             val found = pd.kClass.findBy(
                 pd.kClass,
-                EqFilter(pd.rightKeyProperty as KProperty1<T, Any>, id)
+                EqFilter(pd.rightKeyProperty, id)
             )
             if(found.isEmpty()){
                 error("right side with id = $id not found")

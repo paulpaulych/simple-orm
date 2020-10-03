@@ -9,6 +9,7 @@ class IdPropertyDelegate<T: Any>(
 
     private val log by LoggerDelegate()
 
+    @Suppress("UNCHECKED_CAST")
     override fun getValue(thisRef: Any, property: KProperty<*>): T? {
         return id as T
     }

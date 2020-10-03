@@ -81,18 +81,19 @@ class CglibDelegateProxyGenerator(
         return kClass.cast(proxy)
     }
 
-    private fun <T: Any> defaultValue(kClass: KClass<T>, nullable: Boolean): T?{
+    @Suppress("UNCHECKED_CAST")
+    private fun <T: Any> defaultValue(kClass: KClass<T>, nullable: Boolean): T? {
         if (nullable) return null
-        when(kClass){
-            Short::class -> return Short.MIN_VALUE as T
-            Byte::class -> return Byte.MIN_VALUE as T
-            Int::class -> return Int.MIN_VALUE as T
-            Long::class -> return Long.MIN_VALUE as T
-            Boolean::class -> return false as T
-            BigDecimal::class -> return BigDecimal.ZERO as T
-            String::class -> return "DEFAULTVALUE. IF YOU SEE THIS PLEASE REPORT TO MAINTAINERS" as T
-            List::class -> return listOf<Any>() as T
-            Date::class -> return Date() as T
+        return when(kClass){
+            Short::class -> Short.MIN_VALUE as T
+            Byte::class -> Byte.MIN_VALUE as T
+            Int::class -> Int.MIN_VALUE as T
+            Long::class -> Long.MIN_VALUE as T
+            Boolean::class -> false as T
+            BigDecimal::class -> BigDecimal.ZERO as T
+            String::class -> "DEFAULTVALUE. IF YOU SEE THIS PLEASE REPORT TO MAINTAINERS" as T
+            List::class -> listOf<Any>() as T
+            Date::class -> Date() as T
             else -> error("$kClass cannot be field of entity")
         }
     }

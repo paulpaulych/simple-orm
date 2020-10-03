@@ -1,0 +1,26 @@
+entities:
+
+  integration.model.Book:
+    table: book
+    fields:
+      id:
+        isId: true
+        column: id
+      colors:
+        manyToMany:
+          className: integration.model.Color
+          rightKeyField: id
+          linkTable: book_color
+          leftColumn: book_id
+          rightColumn: color_id
+      name:
+        column: name
+
+  integration.model.Color:
+    table: color
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name

@@ -32,6 +32,7 @@ class CachingDefaultRepoFactory(
             return repo
         }
 
+        @Suppress("UNCHECKED_CAST")
         return repo as ISimpleOrmRepo<T, Any>
     }
 

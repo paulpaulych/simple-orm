@@ -18,6 +18,7 @@ class CglibRseProxyGenerator<T: Any>(
         enhancer.setCallback(object : MethodInterceptor{
 
             override fun intercept(obj: Any, method: Method, args: Array<out Any>, proxy: MethodProxy): Any {
+                @Suppress("UNCHECKED_CAST")
                 val kClass = propertyDescriptor.kProperty.returnType.classifier as KClass<T>
                 if(method.name == "mappedClass"){
                     return kClass
@@ -32,6 +33,7 @@ class CglibRseProxyGenerator<T: Any>(
             }
 
         })
+        @Suppress("UNCHECKED_CAST")
         return enhancer.create() as ResultSetExtractor<Any>
     }
 

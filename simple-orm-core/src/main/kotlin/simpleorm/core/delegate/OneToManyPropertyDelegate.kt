@@ -17,7 +17,7 @@ class OneToManyPropertyDelegate<T: Any>(
         return oneToManyProperty.kClass.findBy(
                 oneToManyProperty.kClass,
                 EqFilter(
-                    oneToManyProperty.foreignKey as KProperty1<T, Any>,
+                    oneToManyProperty.foreignKey,
                     id
                 )
             )

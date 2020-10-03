@@ -1,3 +1,4 @@
+@file:Suppress("UNCHECKED_CAST")
 package simpleorm.core.schema
 
 import simpleorm.core.schema.property.*

@@ -19,7 +19,8 @@ class RepoRegistry(
     override fun <T : Any> findRepo(kClass: KClass<T>): ISimpleOrmRepo<T, Any> {
         val repo = map[kClass]
                 ?:defaultRepo(kClass)
-       return repo as ISimpleOrmRepo<T, Any>
+        @Suppress("UNCHECKED_CAST")
+        return repo as ISimpleOrmRepo<T, Any>
     }
 
     private fun <T: Any> defaultRepo(kClass: KClass<T>): ISimpleOrmRepo<*, *>{

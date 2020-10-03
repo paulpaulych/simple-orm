@@ -1,3 +1,4 @@
+@file:Suppress("UNCHECKED_CAST")
 package simpleorm.core.proxy.repository
 
 import net.sf.cglib.proxy.MethodInterceptor
@@ -63,6 +64,7 @@ class RepoMethodInterceptor(
             return persist(args.first())
         }
         if(method == ISimpleOrmRepo::class.methodByName("query").javaMethod){
+            @Suppress("UNCHECKED_CAST")
             return query(args[0] as String, args[1] as List<Any>)
         }
         if(method.name == "findBy" && method.parameterCount == 1){
@@ -227,6 +229,7 @@ class RepoMethodInterceptor(
                     ?: error("before obj does not exist")
 
             val pd = it.value
+
             val beforeRights = pd.kProperty.get(beforeObj) as List<Any>
             val requiredRights = pd.kProperty.get(obj) as List<Any>
 
@@ -245,7 +248,7 @@ class RepoMethodInterceptor(
                                     pd.rightKeyProperty.get(right)
                                             ?: error("could not extract right key")
                             )
-                            var ps = conn.prepareStatement(sql)
+                            conn.prepareStatement(sql)
                                     .setValues(values)
                                     .executeUpdate()
                         }
@@ -354,10 +357,6 @@ class RepoMethodInterceptor(
                 ?: return insert(obj)
         return update(oldId, obj)
 
-    }
-
-    private fun batchInsert(objs: List<Any>): List<Any>{
-        TODO("not implemented yet")
     }
 
     private fun delete(id: Any) {

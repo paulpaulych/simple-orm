@@ -1,0 +1,25 @@
+entities:
+
+  integration.model.Owner:
+    table: owner
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name
+      products:
+        oneToMany:
+          className: integration.model.Product
+          keyField: ownerId
+
+  integration.model.Product:
+    table: product
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name
+      ownerId:
+        column: owner_id

@@ -1,5 +1,0 @@
-rootProject.name = 'simple-orm'
-
-include "simple-orm-core"
-include "simple-orm-test"
-include "common-utils"

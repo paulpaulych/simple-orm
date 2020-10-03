@@ -1,0 +1,45 @@
+entities:
+
+  integration.model.Author:
+    table: author
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name
+
+  integration.model.Article:
+    table: article
+    fields:
+      id:
+        isId: true
+        column: id
+      title:
+        column: title
+      author:
+        manyToOne:
+          className: integration.model.Author
+          foreignKeyColumn: author_id
+
+  integration.model.Man:
+    table: man
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name
+
+  integration.model.Woman:
+    table: woman
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name
+      husband:
+        manyToOne:
+          className: integration.model.Man
+          foreignKeyColumn: husband_id

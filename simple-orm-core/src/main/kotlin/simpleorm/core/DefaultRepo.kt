@@ -88,6 +88,7 @@ class DefaultRepo<T: Any, ID: Any>(
     override fun persist(obj: T): T {
         val id = idProperty.get(obj)
         if(id != null){
+            @Suppress("UNCHECKED_CAST")
             return update(obj, id as ID)
         }
         return insert(obj)
@@ -134,6 +135,7 @@ class DefaultRepo<T: Any, ID: Any>(
         }
 
         return ids.map{
+            @Suppress("UNCHECKED_CAST")
             findById(it as ID)
                     ?: error("value was not inserted?? please report to maintainers")
         }
@@ -164,6 +166,7 @@ class DefaultRepo<T: Any, ID: Any>(
                     ?: error("generated key is null")
         }
         //fixme: insert и select должны быть в транзации
+        @Suppress("UNCHECKED_CAST")
         return findById(id as ID)
                 ?: error("findById() failed. please report ti " )
     }

@@ -9,6 +9,7 @@ data class OrmSchema(
 ){
     fun <T: Any> findEntityDescriptor(kClass: KClass<T>): EntityDescriptor<T> {
         val ed = entities[kClass]?:throw DescriptorNotFoundException("Entity descriptor for class: ${kClass.qualifiedName} not found")
+        @Suppress("UNCHECKED_CAST")
         return ed as EntityDescriptor<T>
     }
 }

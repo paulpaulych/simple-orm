@@ -18,11 +18,9 @@ import kotlin.reflect.jvm.javaMethod
  * TODO(add constructor arg validation)
  */
 class DelegatedPropertiesInterceptor<T: Any>(
-
         private val kClass: KClass<T>,
         private val readWriteProperties: Map<KMutableProperty1<T, *>, ReadWriteProperty<T, *>>,
         private val readOnlyProperties: Map<KProperty1<T, *>, ReadOnlyProperty<T, *>>
-
 ): MethodInterceptor{
 
     private val log by LoggerDelegate()
@@ -36,17 +34,18 @@ class DelegatedPropertiesInterceptor<T: Any>(
             .filterIsInstance<KMutableProperty1<T, *>>()
             .associateBy { it.setter.javaMethod }
     
+    @Suppress("UNCHECKED_CAST")
     override fun intercept(obj: Any, method: Method, args: Array<out Any>, proxy: MethodProxy): Any? {
         propByOriginalGetters[method]?.let{
             log.trace("getter called for $it")
-            if(it is KMutableProperty1<T, *>){
+            return if(it is KMutableProperty1<T, *>){
                 val delegate = readWriteProperties[it]
                         ?: throwDelegateNotFound()
-                return delegate.getValue(obj as T, it)
+                delegate.getValue(obj as T, it)
             } else{
                 val delegate = readOnlyProperties[it]
                         ?: throwDelegateNotFound()
-                return delegate.getValue(obj as T, it)
+                delegate.getValue(obj as T, it)
             }
         }
         propByOriginalSetters[method]?.let{
@@ -66,6 +65,6 @@ class DelegatedPropertiesInterceptor<T: Any>(
 
 fun isConstructorParameter(kProperty1: KProperty1<*, *>, kClass: KClass<*>): Boolean{
     val primaryConstructor =  kClass.primaryConstructor
-            ?: error("$kClass has no primary contructor")
+            ?: error("$kClass has no primary constructor")
     return primaryConstructor.parameters.find{ it.name == kProperty1.name } != null
 }

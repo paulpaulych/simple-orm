@@ -6,6 +6,7 @@ import java.sql.Date
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 
+@Suppress("UNCHECKED_CAST")
 internal fun <T: Any> byColumnGetter(kClass: KClass<T>, resultSet: ResultSet): (String) -> T {
     return when(kClass) {
         Int::class -> { s: String -> resultSet.getInt(s) as T}

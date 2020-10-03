@@ -1,3 +1,4 @@
+@file:Suppress("UNCHECKED_CAST")
 package simpleorm.core.schema.yaml.ast
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -30,7 +31,7 @@ class YamlSchemaCreator(
     private fun convertRawOrmSchema(rawOrmSchema: RawOrmSchema): OrmSchema{
         return OrmSchema(
             rawOrmSchema.entities.map{ (className, rawEntityDescriptor) ->
-                val entityClass = Class.forName(className).kotlin
+                val entityClass = classForName(className)
                 return@map entityClass to convertRawEntityDescriptor(entityClass, rawEntityDescriptor)
             }.toMap(),
             namingStrategy
@@ -64,7 +65,7 @@ class YamlSchemaCreator(
             )
         }
         if(raw.oneToMany != null){
-            val manyClass = Class.forName(raw.oneToMany.className).kotlin as KClass<Any>
+            val manyClass = classForName(raw.oneToMany.className) as KClass<Any>
             return OneToManyProperty(
                     kProperty as KProperty1<Any, Any>,
                     manyClass,
@@ -72,7 +73,7 @@ class YamlSchemaCreator(
             )
         }
         if(raw.manyToMany != null){
-            val rightClass = Class.forName(raw.manyToMany.className).kotlin as KClass<Any>
+            val rightClass = classForName(raw.manyToMany.className) as KClass<Any>
             return ManyToManyProperty(
                     kProperty as KProperty1<Any, Any>,
                     rightClass,
@@ -83,7 +84,7 @@ class YamlSchemaCreator(
             )
         }
         if(raw.manyToOne != null){
-            val kClass = Class.forName(raw.manyToOne.className).kotlin as KClass<Any>
+            val kClass = classForName(raw.manyToOne.className) as KClass<Any>
             val manyIdProperty = eds.find { it.kClass == kClass }?.idProperty
                     ?: error("please describe $kClass higher in schema file")
             return ManyToOneProperty(
@@ -95,5 +96,12 @@ class YamlSchemaCreator(
         }
         error("invalid schema")
     }
+
+    private fun classForName(name: String): KClass<*> =
+        try {
+            Class.forName(name).kotlin
+        } catch (e: ClassNotFoundException){
+            error("class not found: ${e.message}")
+        }
 
 }

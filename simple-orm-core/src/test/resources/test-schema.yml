@@ -1,0 +1,27 @@
+entities:
+  integration.model.Example:
+    table: example
+    fields:
+      longValue:
+        isId: true
+        column: long_value
+      stringValue:
+        column: string_value
+  integration.model.Person:
+    table: person
+    fields:
+      id:
+        isId: true
+        column: id
+      name:
+        column: name
+      age:
+        column: AGE
+  integration.model.WithNullable:
+    table: with_nullable
+    fields:
+      id:
+        isId: true
+        column: id
+      opt:
+        column: opt
